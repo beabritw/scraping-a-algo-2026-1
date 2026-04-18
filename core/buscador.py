@@ -174,7 +174,8 @@ class Buscador:
             xpath_real = self._obter_xpath(elemento)
 
             logger.info(
-                "Elemento encontrado."
+                "Elemento encontrado. | estrategia=%s | seletor=%s | xpath_dom=%s | valor=%r",
+                estrategia, seletor, xpath_real, valor,
             )
 
             return ResultadoLocalizacao(
