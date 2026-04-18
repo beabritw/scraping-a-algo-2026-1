@@ -1,9 +1,6 @@
 """
-core/buscador.py
-================
-Módulo de Web Scraping com Selenium headless.
+Web Scraping com Selenium headless.
 
-Responsabilidades (conforme divisão do grupo):
     - Carregar a URL fornecida pelo usuário
     - Localizar o campo via XPath ou CSS Selector
     - Logar a posição do elemento no DOM (XPath real via JS)
@@ -38,10 +35,6 @@ from webdriver_manager.chrome import ChromeDriverManager
 logger = logging.getLogger(__name__)
 
 
-# ---------------------------------------------------------------------------
-# Estruturas de dados públicas (consumidas por notificador.py e orquestrador.py)
-# ---------------------------------------------------------------------------
-
 @dataclass
 class ResultadoLocalizacao:
     """Resultado da tentativa de localizar um elemento na página."""
@@ -64,17 +57,9 @@ class AlteracaoDetectada:
         return f"[{ts}] {self.valor_antigo!r} -> {self.valor_novo!r}"
 
 
-# ---------------------------------------------------------------------------
-# Classe principal
-# ---------------------------------------------------------------------------
-
 class Buscador:
     """
     Gerencia o browser headless e a logica de monitoramento.
-
-    Uso tipico (via orquestrador.py):
-        with Buscador() as b:
-            b.monitorar(url, seletor, intervalo, callback)
 
     Parametros
     ----------
@@ -94,20 +79,42 @@ class Buscador:
     # ------------------------------------------------------------------
 
     def iniciar_driver(self) -> None:
-        """Inicializa o Chrome em modo headless."""
+        """Inicializa o Chrome em modo headless com técnicas de evasão anti-bot."""
         opcoes = Options()
         opcoes.add_argument("--headless=new")
         opcoes.add_argument("--no-sandbox")
         opcoes.add_argument("--disable-dev-shm-usage")
         opcoes.add_argument("--disable-gpu")
         opcoes.add_argument("--window-size=1920,1080")
+        
+        # --- TÉCNICAS DE EVASÃO (STEALTH) ---
+        
+        # Remove a flag que avisa que o navegador está sendo controlado por automação
+        opcoes.add_argument("--disable-blink-features=AutomationControlled")
         opcoes.add_experimental_option("excludeSwitches", ["enable-automation"])
         opcoes.add_experimental_option("useAutomationExtension", False)
+        
+        # Falsifica o User-Agent
+        user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        opcoes.add_argument(f"user-agent={user_agent}")
 
         servico = Service(ChromeDriverManager().install())
         self._driver = webdriver.Chrome(service=servico, options=opcoes)
+        
+        # Apaga a assinatura do 'webdriver' direto no motor JavaScript
+        self._driver.execute_cdp_cmd(
+            "Page.addScriptToEvaluateOnNewDocument",
+            {
+                "source": """
+                Object.defineProperty(navigator, 'webdriver', {
+                    get: () => undefined
+                })
+                """
+            }
+        )
+
         self._driver.set_page_load_timeout(self.timeout_pagina)
-        logger.info("Driver Chrome headless iniciado.")
+        logger.info("Driver Chrome headless iniciado com camuflagem stealth.")
 
     def encerrar_driver(self) -> None:
         """Fecha o browser e libera recursos."""
@@ -123,9 +130,6 @@ class Buscador:
     def __exit__(self, *_) -> None:
         self.encerrar_driver()
 
-    # ------------------------------------------------------------------
-    # API publica
-    # ------------------------------------------------------------------
 
     def carregar_pagina(self, url: str) -> bool:
         """
@@ -138,7 +142,7 @@ class Buscador:
         try:
             logger.info("Carregando URL: %s", url)
             self._driver.get(url)
-            logger.info("Pagina carregada: %s", url)
+            logger.info("Pagina carregada.")
             return True
         except TimeoutException:
             logger.error("Timeout ao carregar: %s", url)
@@ -155,7 +159,7 @@ class Buscador:
             - Comeca com '/' ou '(' -> XPath
             - Caso contrario        -> CSS Selector
 
-        Loga o XPath absoluto do elemento (criterio de 2 pts da rubrica).
+        Loga o XPath absoluto do elemento.
         Complexidade: O(n) — n = nos no DOM.
         """
         self._garantir_driver()
@@ -170,8 +174,7 @@ class Buscador:
             xpath_real = self._obter_xpath(elemento)
 
             logger.info(
-                "Elemento encontrado | estrategia=%s | seletor=%s | xpath_dom=%s | valor=%r",
-                estrategia, seletor, xpath_real, valor,
+                "Elemento encontrado."
             )
 
             return ResultadoLocalizacao(
@@ -202,7 +205,7 @@ class Buscador:
         """
         Loop de monitoramento continuo.
 
-        A cada `intervalo` segundos, recarrega a pagina e compara o valor
+        A cada intervalo, recarrega a pagina e compara o valor
         do elemento com o anterior. Se houver mudanca, cria AlteracaoDetectada,
         adiciona ao historico e chama callback_alteracao (notificador.py).
 
@@ -243,7 +246,10 @@ class Buscador:
                 iteracao += 1
 
                 if not self.carregar_pagina(url):
-                    logger.warning("Falha ao recarregar na iteracao %d. Pulando.", iteracao)
+                    logger.warning("Falha ao recarregar na iteracao %d. Pulando." \
+                    "Reiniciando a sessão do Chrome para recuperar o monitoramento...", iteracao)
+                    self.encerrar_driver()
+                    self.iniciar_driver()
                     continue
 
                 resultado = self.localizar_elemento(seletor)
@@ -270,9 +276,6 @@ class Buscador:
 
         return historico
 
-    # ------------------------------------------------------------------
-    # Metodos privados
-    # ------------------------------------------------------------------
 
     def _garantir_driver(self) -> None:
         if not self._driver:
@@ -318,3 +321,15 @@ class Buscador:
             return self._driver.execute_script(script, elemento) or "xpath_indisponivel"
         except Exception:
             return "xpath_indisponivel"
+        
+    def localizar_por_texto(self, texto: str) -> ResultadoLocalizacao:
+        """
+        Localiza o elemento baseando-se no texto visível na página.
+        Usa '.' no XPath para garantir a extração de textos em nós aninhados.
+        """
+        # Proteção contra quebra de sintaxe caso o texto contenha aspas simples
+        texto_seguro = texto.replace("'", '"') 
+        
+        # O uso do '.' varre toda a árvore de texto do elemento de forma unificada
+        seletor_xpath = f"//*[contains(normalize-space(.), '{texto_seguro}')]"
+        return self.localizar_elemento(seletor_xpath)
