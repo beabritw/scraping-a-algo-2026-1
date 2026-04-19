@@ -4,6 +4,7 @@ Módulo de validação de entradas do usuário.
 Complexidade: todas as funções são O(1) ou O(n) onde n = len(string).
 """
 import re
+
 from urllib.parse import urlparse
 
 
@@ -39,7 +40,6 @@ def validar_url(url: str) -> tuple[bool, str]:
     Valida o formato e a acessibilidade da URL.
 
     Complexidade: O(n) onde n = len(url).
-
     """
     url = url.strip()
 
