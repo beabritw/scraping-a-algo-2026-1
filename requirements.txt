@@ -1,4 +1,7 @@
 selenium
 webdriver-manager
 pytest
+flask
 mkdocs
+mkdocs-material
+mkdocstrings[python]
