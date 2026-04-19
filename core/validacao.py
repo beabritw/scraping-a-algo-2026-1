@@ -3,7 +3,7 @@ Módulo de validação de entradas do usuário.
 
 Complexidade: todas as funções são O(1) ou O(n) onde n = len(string).
 """
-
+import re
 from urllib.parse import urlparse
 
 
@@ -98,5 +98,28 @@ def validar_texto_busca(texto: str) -> tuple[bool, str]:
 
     if len(texto) < 2:
         return False, "Digite ao menos 2 caracteres para a busca."
+
+    return True, "OK"
+
+
+def validar_email(email: str) -> tuple[bool, str]:
+    """
+    Valida o formato do endereço de email do destinatário.
+
+    - Não pode ser vazio
+    - Deve seguir o padrão nome@dominio.extensao
+    - Extensão deve ter ao menos 2 caracteres
+
+    Complexidade: O(n) — n = len(email)
+    """
+    email = email.strip()
+
+    if not email:
+        return False, "Email não pode ser vazio."
+
+    padrao = re.compile(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
+
+    if not padrao.match(email):
+        return False, "Email inválido. Use o formato nome@dominio.com"
 
     return True, "OK"
