@@ -1,0 +1,16 @@
+<!-- == tela5_monitor.html ==
+mostrar: "Monitorando... (valor atual: {valor})"
+lista de alterações (começa vazia)
+botão "Parar monitoramento"
+
+→ a cada 5 segundos: fetch GET /status
+    atualizar valor atual na tela
+    PARA CADA nova alteração em historico:
+        adicionar linha na lista:
+        "{hora} — antes: {valor_antigo} → agora: {valor_novo}"
+
+→ ao clicar "Parar": fetch POST /parar e voltar para tela1
+Não usar <form action="..."> — usar fetch() em JavaScript. Assim o Flask responde JSON e o front controla a navegação sem recarregar a página toda.
+
+*****o monitoramento roda em thread separada, e o frontend chama /status a cada 5 segundos para atualizar a tela ao vivo. 
+    -->
