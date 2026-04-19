@@ -38,7 +38,7 @@ def validar_url(url: str) -> tuple[bool, str]:
     """
     Valida o formato e a acessibilidade da URL.
 
-    Complexidade: O(1).
+    Complexidade: O(n) onde n = len(url).
 
     """
     url = url.strip()
