@@ -13,6 +13,14 @@
 Módulo responsável por enviar e-mails via SMTP.
 """
 
+from dotenv import load_dotenv
+import os
+
+load_dotenv()  # lê o .env automaticamente
+
+EMAIL_SENHA = os.environ.get("EMAIL_SENHA")
+
+
 # core/notificador.py
 # smtplib já vem no Python — sem instalar nada. Só precisa da senha de app do Gmail gerada em myaccount.google.com → Segurança → Senhas de app.
 # # PSEUDOCÓDIGO — core/notificador.py
