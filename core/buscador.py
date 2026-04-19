@@ -323,14 +323,28 @@ class Buscador:
         except Exception:
             return "xpath_indisponivel"
         
+    # def localizar_por_texto(self, texto: str) -> ResultadoLocalizacao:
+    #     """
+    #     Localiza o elemento baseando-se no texto visível na página.
+    #     Usa '.' no XPath para garantir a extração de textos em nós aninhados.
+    #     """
+    #     # Proteção contra quebra de sintaxe caso o texto contenha aspas simples
+    #     texto_seguro = texto.replace("'", '"') 
+        
+    #     # O uso do '.' varre toda a árvore de texto do elemento de forma unificada
+    #     seletor_xpath = f"//*[contains(normalize-space(.), '{texto_seguro}')]"
+    #     return self.localizar_elemento(seletor_xpath)
+    
     def localizar_por_texto(self, texto: str) -> ResultadoLocalizacao:
         """
         Localiza o elemento baseando-se no texto visível na página.
-        Usa '.' no XPath para garantir a extração de textos em nós aninhados.
+        Encontra o nó mais profundo (folha) que contém o texto para evitar 
+        capturar a página inteira.
         """
-        # Proteção contra quebra de sintaxe caso o texto contenha aspas simples
         texto_seguro = texto.replace("'", '"') 
         
-        # O uso do '.' varre toda a árvore de texto do elemento de forma unificada
-        seletor_xpath = f"//*[contains(normalize-space(.), '{texto_seguro}')]"
+        # O pulo do gato: procura o elemento que tem o texto, 
+        # mas cujos filhos NÃO têm o texto. Isso isola o elemento exato.
+        seletor_xpath = f"//*[contains(normalize-space(.), '{texto_seguro}') and not(*[contains(normalize-space(.), '{texto_seguro}')])]"
+        
         return self.localizar_elemento(seletor_xpath)
