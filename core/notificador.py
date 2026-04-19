@@ -8,7 +8,7 @@ Uso:
 
 import smtplib
 from email.mime.text import MIMEText
-from dotenv import load_dotenv
+from logging import Logger
 
 from config.email_config import (
     EMAIL_REMETENTE,
@@ -17,10 +17,8 @@ from config.email_config import (
     PORTA,
 )
 
-load_dotenv()
 
-
-def notificar(valor_antigo, valor_novo, email_destino, logger):
+def notificar(valor_antigo: str, valor_novo: str, email_destino: str, logger: Logger) -> None:
     """
     Envia um e-mail avisando que o valor monitorado mudou.
 
@@ -31,13 +29,13 @@ def notificar(valor_antigo, valor_novo, email_destino, logger):
         logger              : objeto de log para registrar o resultado
     """
 
-    # 1. Checar se a senha está configurada
+    # Checar se a senha está configurada
     if not EMAIL_SENHA:
         logger.error("Variável EMAIL_SENHA não configurada.")
-        print("⚠️  EMAIL_SENHA não encontrada. E-mail não enviado.")
+        print("EMAIL_SENHA não encontrada. E-mail não enviado.")
         return
 
-    # 2. Montar o conteúdo do e-mail
+    # Montar o conteúdo do e-mail
     assunto = "Alerta: o valor que você monitora foi alterado!"
 
     corpo = (
@@ -48,13 +46,13 @@ def notificar(valor_antigo, valor_novo, email_destino, logger):
         f"— Assistente de Lances"
     )
 
-    # 3. Criar objeto de e-mail
+    # Criar objeto de e-mail
     mensagem = MIMEText(corpo, "plain", "utf-8")
     mensagem["Subject"] = assunto
     mensagem["From"]    = EMAIL_REMETENTE
     mensagem["To"]      = email_destino
 
-    # 4. Conectar ao Gmail e enviar
+    # Conectar ao Gmail e enviar
     try:
         with smtplib.SMTP(SERVIDOR_SMTP, PORTA) as servidor:
             servidor.starttls()
@@ -65,13 +63,13 @@ def notificar(valor_antigo, valor_novo, email_destino, logger):
                 mensagem.as_string()
             )
 
-        logger.info(f"E-mail enviado para {email_destino}")
-        print(f"✅ Notificação enviada para {email_destino}")
+        logger.info("E-mail enviado para %s", email_destino)
+        print(f"Notificação enviada para {email_destino}")
 
     except smtplib.SMTPAuthenticationError:
         logger.error("Falha de login — verifique EMAIL_SENHA")
-        print("❌ Erro de autenticação. Verifique a senha de app do Google.")
+        print("Erro de autenticação. Verifique a senha de app do Google.")
 
     except Exception as e:
         logger.error(f"Erro ao enviar e-mail: {e}")
-        print(f"❌ Erro inesperado: {e}")
+        print(f"Erro inesperado: {e}")
