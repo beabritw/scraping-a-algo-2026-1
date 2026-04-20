@@ -1,50 +1,54 @@
-<!-- templates/ — Davi (5 arquivos HTML)
-Cada tela é um HTML separado. O Flask renderiza com render_template(). 
-As telas 1 a 4 enviam dados via fetch() para o backend. 
-A tela 5 chama /status a cada 5 segundos.
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Início - Lynx Monitor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css')}}">
+    <!-- <link rel="stylesheet" href="/a-algo-2026-1-project/scraping-a-algo-2026-1/interface/static/style.css"> -->
+</head>
 
-# PSEUDOCÓDIGO — estrutura dos templates HTML
+<body>
 
-== tela1_nome.html ==
-mostrar logo / título do sistema
-campo de texto: "Seu nome"
-botão "Continuar"
-→ ao clicar: salvar nome no sessionStorage e ir para tela2
 
-== tela2_busca.html ==
-campo de texto: "URL da página"
-campo de texto: "Texto visível próximo ao valor (ex: R$ 189)"
-botão "Buscar"
-→ ao clicar: fetch POST /buscar com { nome, url, texto_busca }
-    SE erro: mostrar mensagem de erro em vermelho, não avança
-    SE ok:   guardar { valor, xpath } e ir para tela3
+<header>
+    <h1>Lynx Monitor</h1>
+</header>
 
-== tela3_confirmar.html ==
-mostrar em destaque: "Valor encontrado: {valor}"
-mostrar menor: "XPath: {xpath}"
-botão "Sim, monitorar esse valor"
-botão "Não, tentar outro texto"
-→ "Sim": ir para tela4
-→ "Não": voltar para tela2
 
-== tela4_configurar.html ==
-campo numérico: "Verificar a cada quantos segundos?"
-campo email:    "Email para receber os alertas"
-botão "Iniciar monitoramento"
-→ ao clicar: fetch POST /iniciar com { url, xpath, intervalo, email }
-    SE erro: mostrar mensagem de erro, não avança
-    SE ok:   ir para tela5
+<div class="container">
 
-== tela5_monitor.html ==
-mostrar: "Monitorando... (valor atual: {valor})"
-lista de alterações (começa vazia)
-botão "Parar monitoramento"
 
-→ a cada 5 segundos: fetch GET /status
-    atualizar valor atual na tela
-    PARA CADA nova alteração em historico:
-        adicionar linha na lista:
-        "{hora} — antes: {valor_antigo} → agora: {valor_novo}"
+    <main>
+        <form method="POST">
+            <input type="text" name="userName" placeholder="Nome" required>
+            <input type="email" name="userEmail" placeholder="E-mail" required>
 
-→ ao clicar "Parar": fetch POST /parar e voltar para tela1
-Não usar <form action="..."> — usar fetch() em JavaScript. Assim o Flask responde JSON e o front controla a navegação sem recarregar a página toda. -->
+            <p id="mensagemErro" style="color: red; min-height: 1.2em;"></p>
+            
+            <button type="submit" id="btnContinuar">
+
+                Continuar
+            </button>
+        </form>
+    </main>
+</div>
+    
+    <script src="{{ url_for('static', filename='index.js') }}"></script>
+    
+
+<footer>
+    <div class="footer-content">
+        <p>&copy; 2026 Minha Empresa. Todos os direitos reservados.</p>
+        <nav>
+            <ul>
+                <li><a href="#">Política de Privacidade</a></li>
+                <li><a href="#">Termos de Uso</a></li>
+            </ul>
+        </nav>
+    </div>
+</footer>
+
+
+
+</body>
+</html>

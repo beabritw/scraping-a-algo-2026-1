@@ -1,7 +1,104 @@
-<!-- == tela2_busca.html ==
-campo de texto: "URL da página"
-campo de texto: "Texto visível próximo ao valor (ex: R$ 189)"
-botão "Buscar"
-→ ao clicar: fetch POST /buscar com { nome, url, texto_busca }
-    SE erro: mostrar mensagem de erro em vermelho, não avança
-    SE ok:   guardar { valor, xpath } e ir para tela3 -->
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Buscar Elemento - Lynx Monitor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        /* Estilos específicos para mensagens de erro */
+        .error-message {
+            color: #d93025;
+            background-color: #fce8e6;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            display: none; /* Escondido por padrão */
+        }
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Configurar Busca</h1>
+            <p>Olá, <span id="displayNome" style="font-weight: bold;"></span>!</p>
+        </header>
+
+        <main id="mainContent">
+            <div id="errorMessage" class="error-message"></div>
+
+            <input type="url" id="urlPagina" placeholder="URL da página (https://...)" required>
+            <input type="text" id="textoBusca" placeholder="Texto próximo ao valor (ex: R$ 189)" required>
+            
+            <button id="btnBuscar">
+                Buscar Elemento
+            </button>
+        </main>
+    </div>
+
+    <script>
+        // Recupera o nome salvo na tela anterior
+        const nomeUsuario = localStorage.getItem('userName');
+        document.getElementById('displayNome').textContent = nomeUsuario;
+
+        const btnBuscar = document.getElementById('btnBuscar');
+        const errorDiv = document.getElementById('errorMessage');
+
+        btnBuscar.addEventListener('click', async () => {
+            const url = document.getElementById('urlPagina').value;
+            const texto_busca = document.getElementById('textoBusca').value;
+
+            // Validação básica
+            if (!url || !texto_busca) {
+                showError("Por favor, preencha todos os campos.");
+                return;
+            }
+
+            // Interface em estado de carregamento
+            btnBuscar.innerText = "Buscando...";
+            document.getElementById('mainContent').classList.add('loading');
+            errorDiv.style.display = 'none';
+
+            try {
+                const response = await fetch('/buscar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        nome: nomeUsuario, 
+                        url: url, 
+                        texto_busca: texto_busca 
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // SE OK: Guarda valor e xpath e avança
+                    localStorage.setItem('ultimoValor', data.valor);
+                    localStorage.setItem('ultimoXpath', data.xpath);
+                    
+                    window.location.href = "{{ url_for('tela3') }}";
+                } else {
+                    // SE ERRO: Mostra mensagem
+                    showError(data.message || "Erro ao localizar o elemento na página.");
+                }
+            } catch (err) {
+                showError("Erro de conexão com o servidor.");
+            } finally {
+                btnBuscar.innerText = "Buscar Elemento";
+                document.getElementById('mainContent').classList.remove('loading');
+            }
+        });
+
+        function showError(msg) {
+            errorDiv.textContent = msg;
+            errorDiv.style.display = 'block';
+        }
+    </script>
+</body>
+</html>

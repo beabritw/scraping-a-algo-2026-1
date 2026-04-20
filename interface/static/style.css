@@ -1,0 +1,106 @@
+/* Configurações Globais */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: #f0f2f5;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    color: #333;
+}
+
+/* Container Principal */
+.container {
+    background-color: #ffffff;
+    padding: 2.5rem;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+}
+
+/* Cabeçalho */
+header {
+    margin-bottom: 2rem;
+}
+
+header img {
+    width: 80px;
+    height: auto;
+    margin-bottom: 1rem;
+}
+
+header h1 {
+    font-size: 1.8rem;
+    color: #1a73e8; /* Azul tecnológico */
+    font-weight: 600;
+}
+
+/* Campos de Entrada */
+main {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+input[type="text"],
+input[type="email"] {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1.5px solid #ddd;
+    margin: 3px;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+    outline: none;
+}
+
+input:focus {
+    border-color: #1a73e8;
+}
+
+/* Botão */
+#btnContinuar {
+    background-color: #1a73e8;
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.1s active;
+    margin-top: 0.5rem;
+}
+
+#btnContinuar:hover {
+    background-color: #1557b0;
+}
+
+#btnContinuar:active {
+    transform: scale(0.98);
+}
+
+/* Responsividade para telas pequenas */
+@media (max-width: 480px) {
+    .container {
+        margin: 20px;
+        padding: 1.5rem;
+    }
+}
+
+footer {
+    background-color: #333;
+    color: white;
+    padding: 40px 100px 50px;
+    display: flex;
+    justify-content: space-between; /* Espaçamento entre colunas */
+    flex-wrap: wrap; /* Para responsividade */
+}
