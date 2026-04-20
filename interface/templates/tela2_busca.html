@@ -2,103 +2,127 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Buscar Elemento - Lynx Monitor</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <style>
-        /* Estilos específicos para mensagens de erro */
-        .error-message {
-            color: #d93025;
-            background-color: #fce8e6;
-            padding: 10px;
-            border-radius: 4px;
-            font-size: 0.9rem;
-            margin-bottom: 1rem;
-            display: none; /* Escondido por padrão */
-        }
-        .loading {
-            opacity: 0.6;
-            pointer-events: none;
-        }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buscar Elemento — Lynx Monitor</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <!-- Aplica tema antes do render -->
+    <script>
+        (function(){
+            var t = localStorage.getItem('lynx-theme');
+            var d = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            document.documentElement.setAttribute('data-theme', t || (d ? 'dark' : 'light'));
+        })();
+    </script>
 </head>
 <body>
 
-    <div class="container">
-        <header>
-            <h1>Configurar Busca</h1>
-            <p>Olá, <span id="displayNome" style="font-weight: bold;"></span>!</p>
-        </header>
+<!-- ── Barra de navegação ────────────────────────────────── -->
+<div class="titlebar">
+    <a class="titlebar-brand" href="/">
+        <div class="brand-icon" aria-hidden="true">🔍</div>
+        <div class="brand-text">
+            <h1>Lynx Monitor</h1>
+            <small>De olho nos dados em tempo real</small>
+        </div>
+    </a>
 
-        <main id="mainContent">
-            <div id="errorMessage" class="error-message"></div>
+    <button id="theme-toggle" class="theme-toggle" aria-label="Alternar tema">
+        <span class="icon" aria-hidden="true">
+            <span class="icon-sun">☀️</span>
+            <span class="icon-moon">🌙</span>
+        </span>
+        <span class="label-dark">Modo escuro</span>
+        <span class="label-light">Modo claro</span>
+    </button>
+</div>
 
-            <input type="url" id="urlPagina" placeholder="URL da página (https://...)" required>
-            <input type="text" id="textoBusca" placeholder="Texto próximo ao valor (ex: R$ 189)" required>
-            
-            <button id="btnBuscar">
-                Buscar Elemento
-            </button>
-        </main>
+<!-- ── Conteúdo da Tela 2 ────────────────────────────────── -->
+<main class="page-busca">
+    <div class="busca-layout">
+
+        <!-- Cabeçalho da página -->
+        <div class="busca-header">
+            <div>
+                <h2>Configurar monitoramento</h2>
+                <p>Informe a URL e o texto que identifica o valor a rastrear</p>
+            </div>
+            <div class="user-chip">
+                <span aria-hidden="true">👤</span>
+                <span id="displayNome">Carregando…</span>
+            </div>
+        </div>
+
+        <!-- Card do formulário -->
+        <div class="card busca-card">
+            <div class="busca-form" id="busca-form">
+
+                <!-- Dica de uso -->
+                <div class="busca-hint">
+                    <span class="hint-icon">💡</span>
+                    <span>
+                        Cole a URL completa da página que deseja monitorar e informe um trecho
+                        de texto próximo ao valor (ex: <strong>R$ 189,90</strong> ou <strong>Em estoque</strong>).
+                    </span>
+                </div>
+
+                <!-- Erro -->
+                <div id="errorMessage" class="error-box" role="alert">
+                    <span aria-hidden="true">⚠️</span>
+                    <span id="errorText">Erro</span>
+                </div>
+
+                <!-- Campos -->
+                <div class="form-row">
+                    <label class="input-label" for="urlPagina">URL da página</label>
+                    <input
+                        class="input-field"
+                        type="url"
+                        id="urlPagina"
+                        placeholder="https://exemplo.com/produto"
+                        autocomplete="off"
+                        spellcheck="false"
+                        required
+                    >
+                </div>
+
+                <div class="form-row">
+                    <label class="input-label" for="textoBusca">Texto de referência</label>
+                    <input
+                        class="input-field"
+                        type="text"
+                        id="textoBusca"
+                        placeholder="Ex: R$ 189 ou Em estoque"
+                        autocomplete="off"
+                        required
+                    >
+                </div>
+
+                <button id="btnBuscar" class="btn-primary">
+                    <span id="btnLabel">Buscar elemento</span>
+                    <span id="btnIcon" aria-hidden="true">→</span>
+                </button>
+
+            </div>
+        </div>
+
     </div>
+</main>
 
-    <script>
-        // Recupera o nome salvo na tela anterior
-        const nomeUsuario = localStorage.getItem('userName');
-        document.getElementById('displayNome').textContent = nomeUsuario;
+<!-- ── Rodapé ────────────────────────────────────────────── -->
+<footer>
+    <span>© 2026 Lynx Monitor</span>
+    <span class="sep">·</span>
+    <a href="#">Privacidade</a>
+    <span class="sep">·</span>
+    <a href="#">Termos de Uso</a>
+</footer>
 
-        const btnBuscar = document.getElementById('btnBuscar');
-        const errorDiv = document.getElementById('errorMessage');
-
-        btnBuscar.addEventListener('click', async () => {
-            const url = document.getElementById('urlPagina').value;
-            const texto_busca = document.getElementById('textoBusca').value;
-
-            // Validação básica
-            if (!url || !texto_busca) {
-                showError("Por favor, preencha todos os campos.");
-                return;
-            }
-
-            // Interface em estado de carregamento
-            btnBuscar.innerText = "Buscando...";
-            document.getElementById('mainContent').classList.add('loading');
-            errorDiv.style.display = 'none';
-
-            try {
-                const response = await fetch('/buscar', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        nome: nomeUsuario, 
-                        url: url, 
-                        texto_busca: texto_busca 
-                    })
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    // SE OK: Guarda valor e xpath e avança
-                    localStorage.setItem('ultimoValor', data.valor);
-                    localStorage.setItem('ultimoXpath', data.xpath);
-                    
-                    window.location.href = "{{ url_for('tela3') }}";
-                } else {
-                    // SE ERRO: Mostra mensagem
-                    showError(data.message || "Erro ao localizar o elemento na página.");
-                }
-            } catch (err) {
-                showError("Erro de conexão com o servidor.");
-            } finally {
-                btnBuscar.innerText = "Buscar Elemento";
-                document.getElementById('mainContent').classList.remove('loading');
-            }
-        });
-
-        function showError(msg) {
-            errorDiv.textContent = msg;
-            errorDiv.style.display = 'block';
-        }
-    </script>
-</body>
-</html>
+<script src="{{ url_for('static', filename='theme.js') }}"></script>
+<script src="{{ url_for('static', filename='index.js') }}"></script>

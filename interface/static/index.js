@@ -1,40 +1,75 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const btn = document.getElementById('btnContinuar');
-    const inputNome = document.getElementById('userName');
-    const inputEmail = document.getElementById('userEmail');
-    const displayErro = document.getElementById('mensagemErro');
+   // ── Validação de formulário ───────────────────────────────────
+    const form        = document.getElementById('loginForm');
+    const nameInput   = document.getElementById('userName');
+    const emailInput  = document.getElementById('userEmail');
+    const nameError   = document.getElementById('nameError');
+    const emailError  = document.getElementById('emailError');
+    const emailErrMsg = document.getElementById('emailErrorMsg');
 
-    // Função para validar formato básico de e-mail
-    const validarEmail = (email) => {
-        return email.includes('@') && email.includes('.');
-    };
+    // Regex: exige usuario@dominio.ext (mínimo 2 chars no TLD)
+    const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
-    btn.addEventListener('click', () => {
-        const nome = inputNome.value.trim();
-        const email = inputEmail.value.trim();
-        const proximaRota = btn.getAttribute('data-url');
+    // ── Funções de estado ─────────────────────────────────────────
+    function setError(input, errorEl, msgEl, msg) {
+        input.classList.add('invalid');
+        input.setAttribute('aria-invalid', 'true');
+        errorEl.classList.add('visible');
+        if (msgEl) msgEl.textContent = msg;
+    }
 
-        // Limpa a mensagem de erro anterior
-        displayErro.textContent = "";
+    function clearError(input, errorEl) {
+        input.classList.remove('invalid');
+        input.setAttribute('aria-invalid', 'false');
+        errorEl.classList.remove('visible');
+    }
 
-        // Validação de campos vazios
-        if (nome !== "" && email !== "") {
-            
-            // Validação de formato de e-mail
-            if (!validarEmail(email)) {
-                displayErro.textContent = "Por favor, insira um e-mail válido.";
-                return;
-            }
+    // ── Regras de validação ───────────────────────────────────────
+    function validateName() {
+        const val = nameInput.value.trim();
+        if (!val) {
+            setError(nameInput, nameError, null, '');
+            return false;
+        }
+        clearError(nameInput, nameError);
+        return true;
+    }
 
-            localStorage.setItem('userName', nome);
-            localStorage.setItem('userEmail', email);
+    function validateEmail() {
+        const val = emailInput.value.trim();
+        if (!val) {
+            setError(emailInput, emailError, emailErrMsg, 'Informe seu e-mail.');
+            return false;
+        }
+        if (!EMAIL_REGEX.test(val)) {
+            setError(emailInput, emailError, emailErrMsg, 'E-mail inválido — use o formato usuario@dominio.com');
+            return false;
+        }
+        clearError(emailInput, emailError);
+        return true;
+    }
 
-            // Agora sim, redireciona para a Tela 2
-            window.location.href = proximaRota;
-            
-        } else {
-            // Feedback visual em caso de campos vazios
-            displayErro.textContent = "Insira os dados para continuar";
+    // ── Eventos: valida ao sair do campo ─────────────────────────
+    nameInput.addEventListener('blur',  validateName);
+    emailInput.addEventListener('blur', validateEmail);
+
+    // Limpa erro enquanto o usuário digita (após primeiro erro)
+    nameInput.addEventListener('input', () => {
+        if (nameInput.classList.contains('invalid')) validateName();
+    });
+
+    emailInput.addEventListener('input', () => {
+        if (emailInput.classList.contains('invalid')) validateEmail();
+    });
+
+    // ── Submit: bloqueia se houver erro ──────────────────────────
+    form.addEventListener('submit', (e) => {
+        const nameOk  = validateName();
+        const emailOk = validateEmail();
+
+        if (!nameOk || !emailOk) {
+            e.preventDefault();
+            // Foca no primeiro campo com problema
+            if (!nameOk)  nameInput.focus();
+            else           emailInput.focus();
         }
     });
-});

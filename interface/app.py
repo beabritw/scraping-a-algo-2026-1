@@ -1,43 +1,39 @@
 from flask import Flask, render_template, request, redirect, url_for, session
 
 app = Flask(__name__)
-
-
-app = Flask(__name__)
-app.secret_key = 'chave_secreta_para_seguranca' # Necessário para usar sessions
+app.secret_key = 'chave_secreta_para_seguranca'
 
 @app.route('/', methods=['GET', 'POST'])
 def tela1():
     if request.method == 'POST':
-        # Pega os dados do formulário
-        nome = request.form.get('userName')
+        nome  = request.form.get('userName')
         email = request.form.get('userEmail')
-        
+
         if nome and email:
-            session['userName'] = nome  # Salva o nome na sessão do servidor
+            session['userName'] = nome
             print(f">>> Dados Recebidos: Nome={nome}, Email={email}")
-            return redirect(url_for('tela2'))
-            
+            return redirect(url_for('tela2'))  
+
     return render_template('tela1_nome.html')
+
 
 @app.route('/tela2', methods=['GET', 'POST'])
 def tela2():
-    nome = session.get('userName', 'Usuário') # Busca o nome salvo
-    
+    nome = session.get('userName', 'Usuário')
+
     if request.method == 'POST':
-        url = request.form.get('urlPagina')
+        url   = request.form.get('urlPagina')
         texto = request.form.get('textoBusca')
-        
-        # Aqui você faria a sua lógica de busca Python...
-        # Se der erro, você pode passar uma variável 'erro' para o template
-        return redirect(url_for('tela3'))
+        # lógica de busca
+        return redirect(url_for('tela3'))     
 
     return render_template('tela2_busca.html', nome=nome)
 
-# Rota para a Tela 3 (Confirmar)
+
 @app.route('/confirmar')
 def tela3():
-    return render_template('tela2_confirmar.html')
+    return render_template('tela3_confirmar.html')
+
 
 if __name__ == '__main__':
     app.run(debug=True)
