@@ -1,40 +1,94 @@
-"""
-Teste básico do módulo validacao.
-Verifica se a função validar() se comporta corretamente.
-"""
+import unicodedata
 
-import unittest
+import pytest
 
-
-class TestValidacao(unittest.TestCase):
-
-    def test_valor_valido(self):
-        """Valores válidos devem retornar True."""
-        from core import validacao
-
-        resultado = validacao.validar("100", "200")
-
-        self.assertTrue(resultado)
-        print("✅ Teste 1 passou: valor válido.")
-
-    def test_valor_invalido(self):
-        """Valores inválidos devem retornar False."""
-        from core import validacao
-
-        resultado = validacao.validar("200", "100")
-
-        self.assertFalse(resultado)
-        print("✅ Teste 2 passou: valor inválido.")
-
-    def test_valor_nao_numerico(self):
-        """Se valores não forem numéricos, deve retornar False."""
-        from core import validacao
-
-        resultado = validacao.validar("abc", "200")
-
-        self.assertFalse(resultado)
-        print("✅ Teste 3 passou: valor não numérico tratado.")
+from core.validacao import (
+    validar_email,
+    validar_nome,
+    validar_numero,
+    validar_texto_busca,
+    validar_url,
+)
 
 
-if __name__ == "__main__":
-    unittest.main()
+def _normalizar(texto):
+    decomposed = unicodedata.normalize("NFKD", texto)
+    return "".join(char for char in decomposed if not unicodedata.combining(char)).lower()
+
+
+@pytest.mark.parametrize(
+    ("nome", "esperado", "trecho_msg"),
+    [
+        ("Ana Paula", True, "OK"),
+        ("Jo", False, "ao menos 3 letras"),
+        ("Ana3", False, "apenas letras"),
+        ("   ", False, "nao pode ser vazio"),
+    ],
+)
+def test_validar_nome(nome, esperado, trecho_msg):
+    ok, msg = validar_nome(nome)
+
+    assert ok is esperado
+    assert _normalizar(trecho_msg) in _normalizar(msg)
+
+
+@pytest.mark.parametrize(
+    ("url", "esperado", "trecho_msg"),
+    [
+        ("https://example.com/produto", True, "OK"),
+        ("ftp://example.com", False, "http://"),
+        ("https://", False, "dominio valido"),
+        ("", False, "nao pode ser vazia"),
+    ],
+)
+def test_validar_url(url, esperado, trecho_msg):
+    ok, msg = validar_url(url)
+
+    assert ok is esperado
+    assert _normalizar(trecho_msg) in _normalizar(msg)
+
+
+@pytest.mark.parametrize(
+    ("valor", "esperado", "trecho_msg"),
+    [
+        ("30", True, "OK"),
+        ("0", False, "maior que zero"),
+        ("dez", False, "numeros inteiros"),
+        ("", False, "nao pode ser vazio"),
+    ],
+)
+def test_validar_numero(valor, esperado, trecho_msg):
+    ok, msg = validar_numero(valor)
+
+    assert ok is esperado
+    assert _normalizar(trecho_msg) in _normalizar(msg)
+
+
+@pytest.mark.parametrize(
+    ("texto", "esperado", "trecho_msg"),
+    [
+        ("R$ 199,90", True, "OK"),
+        ("a", False, "ao menos 2 caracteres"),
+        ("   ", False, "nao pode ser vazio"),
+    ],
+)
+def test_validar_texto_busca(texto, esperado, trecho_msg):
+    ok, msg = validar_texto_busca(texto)
+
+    assert ok is esperado
+    assert _normalizar(trecho_msg) in _normalizar(msg)
+
+
+@pytest.mark.parametrize(
+    ("email", "esperado", "trecho_msg"),
+    [
+        ("user@example.com", True, "OK"),
+        ("user@", False, "email invalido"),
+        ("", False, "nao pode ser vazio"),
+    ],
+)
+def test_validar_email(email, esperado, trecho_msg):
+    ok, msg = validar_email(email)
+
+    assert ok is esperado
+    assert _normalizar(trecho_msg) in _normalizar(msg)
