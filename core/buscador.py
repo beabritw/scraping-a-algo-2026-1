@@ -74,9 +74,6 @@ class Buscador:
         self.timeout_elemento = timeout_elemento
         self._driver: Optional[webdriver.Chrome] = None
 
-    # ------------------------------------------------------------------
-    # Ciclo de vida — suporte a context manager
-    # ------------------------------------------------------------------
 
     def iniciar_driver(self) -> None:
         """Inicializa o Chrome em modo headless com técnicas de evasão anti-bot."""
@@ -86,9 +83,7 @@ class Buscador:
         opcoes.add_argument("--disable-dev-shm-usage")
         opcoes.add_argument("--disable-gpu")
         opcoes.add_argument("--window-size=1920,1080")
-        
-        # --- TÉCNICAS DE EVASÃO (STEALTH) ---
-        
+                
         # Remove a flag que avisa que o navegador está sendo controlado por automação
         opcoes.add_argument("--disable-blink-features=AutomationControlled")
         opcoes.add_experimental_option("excludeSwitches", ["enable-automation"])
@@ -323,14 +318,17 @@ class Buscador:
         except Exception:
             return "xpath_indisponivel"
         
+    
     def localizar_por_texto(self, texto: str) -> ResultadoLocalizacao:
         """
         Localiza o elemento baseando-se no texto visível na página.
-        Usa '.' no XPath para garantir a extração de textos em nós aninhados.
+        Encontra o nó mais profundo (folha) que contém o texto para evitar 
+        capturar a página inteira.
         """
-        # Proteção contra quebra de sintaxe caso o texto contenha aspas simples
         texto_seguro = texto.replace("'", '"') 
         
-        # O uso do '.' varre toda a árvore de texto do elemento de forma unificada
-        seletor_xpath = f"//*[contains(normalize-space(.), '{texto_seguro}')]"
+        # Procura o elemento que tem o texto, mas cujos 
+        # filhos NÃO têm o texto pra isolar o elemento exato.
+        seletor_xpath = f"//*[contains(normalize-space(.), '{texto_seguro}') and not(*[contains(normalize-space(.), '{texto_seguro}')])]"
+        
         return self.localizar_elemento(seletor_xpath)
