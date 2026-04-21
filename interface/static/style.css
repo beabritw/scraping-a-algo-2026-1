@@ -1,0 +1,529 @@
+/* ============================================================
+   LYNX MONITOR — Design System
+   Estrutura:
+   1. Tokens (variáveis de cor, espaço, tipografia)
+   2. Reset & Base
+   3. Componentes Compartilhados (titlebar, footer, inputs, botões)
+   4. Tela 1 — Login
+   5. Tela 2 — Busca
+   6. Utilitários
+   7. Animações
+============================================================ */
+
+/* ── 1. TOKENS ──────────────────────────────────────────── */
+:root {
+    /* Paleta — Modo Claro */
+    --bg:            #f0f4fa;
+    --bg-alt:        #e3e9f4;
+    --surface:       #ffffff;
+    --surface-raised:#f7f9fc;
+    --border:        #d0d8e8;
+    --border-focus:  #3b6fd4;
+
+    --text-primary:  #111827;
+    --text-secondary:#4b5a6e;
+    --text-muted:    #8895a7;
+
+    --accent:        #2563eb;
+    --accent-hover:  #1d4ed8;
+    --accent-soft:   #dbeafe;
+    --accent-text:   #1e40af;
+
+    --danger:        #dc2626;
+    --danger-soft:   #fee2e2;
+
+    --shadow-sm:  0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
+    --shadow-md:  0 4px 16px rgba(0,0,0,.10), 0 2px 6px rgba(0,0,0,.06);
+    --shadow-lg:  0 12px 40px rgba(0,0,0,.13);
+
+    /* Espaçamento */
+    --sp-1: 4px;  --sp-2: 8px;   --sp-3: 12px;
+    --sp-4: 16px; --sp-5: 20px;  --sp-6: 24px;
+    --sp-8: 32px; --sp-10: 40px; --sp-12: 48px;
+
+    /* Tipografia */
+    --font-display: 'Syne', sans-serif;
+    --font-body:    'IBM Plex Sans', sans-serif;
+    --font-mono:    'IBM Plex Mono', monospace;
+
+    /* Bordas */
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+    --radius-xl: 24px;
+
+    /* Transições */
+    --ease: cubic-bezier(.4,0,.2,1);
+    --duration: 220ms;
+}
+
+/* Paleta — Modo Escuro */
+[data-theme="dark"] {
+    --bg:            #0d1117;
+    --bg-alt:        #161b22;
+    --surface:       #1c2230;
+    --surface-raised:#232d3f;
+    --border:        #2d3a4e;
+    --border-focus:  #60a5fa;
+
+    --text-primary:  #e6edf3;
+    --text-secondary:#8b9ab4;
+    --text-muted:    #4d5e78;
+
+    --accent:        #60a5fa;
+    --accent-hover:  #93c5fd;
+    --accent-soft:   #172035;
+    --accent-text:   #93c5fd;
+
+    --danger:        #f87171;
+    --danger-soft:   #1f1315;
+
+    --shadow-sm:  0 1px 3px rgba(0,0,0,.3);
+    --shadow-md:  0 4px 16px rgba(0,0,0,.4);
+    --shadow-lg:  0 12px 40px rgba(0,0,0,.5);
+}
+
+/* ── 2. RESET & BASE ────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+    height: 100%;
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+}
+
+body {
+    font-family: var(--font-body);
+    background-color: var(--bg);
+    color: var(--text-primary);
+    min-height: 100%;
+    line-height: 1.6;
+    transition: background-color var(--duration) var(--ease),
+                color var(--duration) var(--ease);
+}
+
+/* Textura sutil de fundo */
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+        radial-gradient(circle at 20% 50%, var(--accent-soft) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, var(--bg-alt) 0%, transparent 40%);
+    opacity: .5;
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* ── 3. COMPONENTES COMPARTILHADOS ──────────────────────── */
+
+/* Titlebar */
+.titlebar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--sp-4) var(--sp-8);
+    background-color: var(--surface);
+    border-bottom: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    transition: background-color var(--duration) var(--ease),
+                border-color var(--duration) var(--ease);
+}
+
+.titlebar-brand {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+    text-decoration: none;
+}
+
+.brand-icon {
+    width: 36px;
+    height: 36px;
+    background: var(--accent);
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(37,99,235,.35);
+}
+
+[data-theme="dark"] .brand-icon {
+    box-shadow: 0 2px 8px rgba(96,165,250,.25);
+}
+
+.brand-text h1 {
+    font-family: var(--font-display);
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: -.3px;
+    line-height: 1.1;
+}
+
+.brand-text small {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: .5px;
+    text-transform: uppercase;
+}
+
+/* Botão de tema */
+.theme-toggle {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    padding: var(--sp-2) var(--sp-4);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-xl);
+    background: var(--surface-raised);
+    color: var(--text-secondary);
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--duration) var(--ease);
+    white-space: nowrap;
+}
+
+.theme-toggle:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-soft);
+}
+
+.theme-toggle .icon { font-size: 15px; line-height: 1; }
+
+.theme-toggle .label-light { display: none; }
+.theme-toggle .label-dark  { display: inline; }
+[data-theme="dark"] .theme-toggle .label-light { display: inline; }
+[data-theme="dark"] .theme-toggle .label-dark  { display: none; }
+
+/* Footer */
+footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--sp-3) var(--sp-6);
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    gap: var(--sp-4);
+    transition: background-color var(--duration) var(--ease);
+}
+
+footer a {
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color var(--duration) var(--ease);
+}
+
+footer a:hover { color: var(--accent); }
+
+footer .sep { opacity: .4; }
+
+/* Inputs */
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-2);
+}
+
+.input-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    letter-spacing: .3px;
+}
+
+.input-field {
+    width: 100%;
+    padding: var(--sp-3) var(--sp-4);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--bg);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 15px;
+    outline: none;
+    transition: border-color var(--duration) var(--ease),
+                box-shadow var(--duration) var(--ease),
+                background-color var(--duration) var(--ease);
+}
+
+.input-field::placeholder { color: var(--text-muted); }
+
+.input-field:focus {
+    border-color: var(--border-focus);
+    box-shadow: 0 0 0 3px rgba(59,111,212,.15);
+    background: var(--surface);
+}
+
+[data-theme="dark"] .input-field:focus {
+    box-shadow: 0 0 0 3px rgba(96,165,250,.15);
+}
+
+.input-field:hover:not(:focus) { border-color: var(--text-muted); }
+
+/* Botão primário */
+.btn-primary {
+    width: 100%;
+    padding: var(--sp-3) var(--sp-6);
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-md);
+    font-family: var(--font-body);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: .2px;
+    transition: background-color var(--duration) var(--ease),
+                transform 100ms var(--ease),
+                box-shadow var(--duration) var(--ease);
+    box-shadow: 0 2px 8px rgba(37,99,235,.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-2);
+}
+
+.btn-primary:hover {
+    background: var(--accent-hover);
+    box-shadow: 0 4px 16px rgba(37,99,235,.4);
+}
+
+.btn-primary:active { transform: scale(.98); }
+
+.btn-primary:disabled {
+    opacity: .6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Mensagem de erro */
+.error-box {
+    display: none;
+    padding: var(--sp-3) var(--sp-4);
+    background: var(--danger-soft);
+    border: 1px solid var(--danger);
+    border-radius: var(--radius-md);
+    color: var(--danger);
+    font-size: 13.5px;
+    line-height: 1.5;
+    animation: slideDown .2s var(--ease);
+}
+
+.error-box.visible { display: flex; gap: var(--sp-2); align-items: flex-start; }
+
+/* Card genérico */
+.card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-md);
+    transition: background-color var(--duration) var(--ease),
+                border-color var(--duration) var(--ease);
+}
+
+/* ── 4. TELA 1 — LOGIN ──────────────────────────────────── */
+.page-login {
+    min-height: calc(100vh - 57px - 45px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--sp-8) var(--sp-4) calc(var(--sp-8) + 45px);
+    position: relative;
+    z-index: 1;
+}
+
+.login-card {
+    width: 100%;
+    max-width: 420px;
+    padding: var(--sp-10) var(--sp-8);
+}
+
+.login-header {
+    text-align: center;
+    margin-bottom: var(--sp-8);
+}
+
+.login-header .welcome-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-2);
+    background: var(--accent-soft);
+    color: var(--accent-text);
+    padding: var(--sp-1) var(--sp-4);
+    border-radius: var(--radius-xl);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    margin-bottom: var(--sp-4);
+    font-family: var(--font-mono);
+}
+
+.login-header h2 {
+    font-family: var(--font-display);
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.2;
+    margin-bottom: var(--sp-2);
+}
+
+.login-header p {
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-5);
+}
+
+.form-row {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-2);
+}
+
+.login-divider {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+    color: var(--text-muted);
+    font-size: 12px;
+    font-family: var(--font-mono);
+}
+
+.login-divider::before,
+.login-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+}
+
+/* ── 5. TELA 2 — BUSCA ──────────────────────────────────── */
+.page-busca {
+    min-height: calc(100vh - 57px - 45px);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: var(--sp-10) var(--sp-4) calc(var(--sp-10) + 45px);
+    position: relative;
+    z-index: 1;
+}
+
+.busca-layout {
+    width: 100%;
+    max-width: 680px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-6);
+}
+
+.busca-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--sp-4);
+}
+
+.busca-header h2 {
+    font-family: var(--font-display);
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.busca-header p {
+    color: var(--text-secondary);
+    font-size: 14px;
+    margin-top: var(--sp-1);
+}
+
+.user-chip {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    background: var(--accent-soft);
+    border: 1px solid var(--accent);
+    border-radius: var(--radius-xl);
+    padding: var(--sp-2) var(--sp-4);
+    font-size: 13px;
+    color: var(--accent-text);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.busca-card {
+    padding: var(--sp-8);
+}
+
+.busca-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-6);
+}
+
+.busca-hint {
+    padding: var(--sp-4);
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    font-size: 13px;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: flex-start;
+    gap: var(--sp-3);
+    line-height: 1.5;
+}
+
+.busca-hint .hint-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+
+/* ── 6. UTILITÁRIOS ─────────────────────────────────────── */
+.sr-only {
+    position: absolute; width: 1px; height: 1px;
+    padding: 0; margin: -1px; overflow: hidden;
+    clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}
+
+/* ── 7. ANIMAÇÕES ───────────────────────────────────────── */
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.card { animation: fadeUp .35s var(--ease) both; }
+
+/* Responsivo */
+@media (max-width: 480px) {
+    .titlebar { padding: var(--sp-3) var(--sp-4); }
+    .login-card, .busca-card { padding: var(--sp-6) var(--sp-5); }
+    .busca-header { flex-direction: column; align-items: flex-start; }
+}
