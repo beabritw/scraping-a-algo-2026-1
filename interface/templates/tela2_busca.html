@@ -1,7 +1,128 @@
-<!-- == tela2_busca.html ==
-campo de texto: "URL da página"
-campo de texto: "Texto visível próximo ao valor (ex: R$ 189)"
-botão "Buscar"
-→ ao clicar: fetch POST /buscar com { nome, url, texto_busca }
-    SE erro: mostrar mensagem de erro em vermelho, não avança
-    SE ok:   guardar { valor, xpath } e ir para tela3 -->
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buscar Elemento — Lynx Monitor</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <!-- Aplica tema antes do render -->
+    <script>
+        (function(){
+            var t = localStorage.getItem('lynx-theme');
+            var d = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            document.documentElement.setAttribute('data-theme', t || (d ? 'dark' : 'light'));
+        })();
+    </script>
+</head>
+<body>
+
+<!-- ── Barra de navegação ────────────────────────────────── -->
+<div class="titlebar">
+    <a class="titlebar-brand" href="/">
+        <div class="brand-icon" aria-hidden="true">🔍</div>
+        <div class="brand-text">
+            <h1>Lynx Monitor</h1>
+            <small>De olho nos dados em tempo real</small>
+        </div>
+    </a>
+
+    <button id="theme-toggle" class="theme-toggle" aria-label="Alternar tema">
+        <span class="icon" aria-hidden="true">
+            <span class="icon-sun">☀️</span>
+            <span class="icon-moon">🌙</span>
+        </span>
+        <span class="label-dark">Modo escuro</span>
+        <span class="label-light">Modo claro</span>
+    </button>
+</div>
+
+<!-- ── Conteúdo da Tela 2 ────────────────────────────────── -->
+<main class="page-busca">
+    <div class="busca-layout">
+
+        <!-- Cabeçalho da página -->
+        <div class="busca-header">
+            <div>
+                <h2>Configurar monitoramento</h2>
+                <p>Informe a URL e o texto que identifica o valor a rastrear</p>
+            </div>
+            <div class="user-chip">
+                <span aria-hidden="true">👤</span>
+                <span id="displayNome">Carregando…</span>
+            </div>
+        </div>
+
+        <!-- Card do formulário -->
+        <div class="card busca-card">
+            <div class="busca-form" id="busca-form">
+
+                <!-- Dica de uso -->
+                <div class="busca-hint">
+                    <span class="hint-icon">💡</span>
+                    <span>
+                        Cole a URL completa da página que deseja monitorar e informe um trecho
+                        de texto próximo ao valor (ex: <strong>R$ 189,90</strong> ou <strong>Em estoque</strong>).
+                    </span>
+                </div>
+
+                <!-- Erro -->
+                <div id="errorMessage" class="error-box" role="alert">
+                    <span aria-hidden="true">⚠️</span>
+                    <span id="errorText">Erro</span>
+                </div>
+
+                <!-- Campos -->
+                <div class="form-row">
+                    <label class="input-label" for="urlPagina">URL da página</label>
+                    <input
+                        class="input-field"
+                        type="url"
+                        id="urlPagina"
+                        placeholder="https://exemplo.com/produto"
+                        autocomplete="off"
+                        spellcheck="false"
+                        required
+                    >
+                </div>
+
+                <div class="form-row">
+                    <label class="input-label" for="textoBusca">Texto de referência</label>
+                    <input
+                        class="input-field"
+                        type="text"
+                        id="textoBusca"
+                        placeholder="Ex: R$ 189 ou Em estoque"
+                        autocomplete="off"
+                        required
+                    >
+                </div>
+
+                <button id="btnBuscar" class="btn-primary">
+                    <span id="btnLabel">Buscar elemento</span>
+                    <span id="btnIcon" aria-hidden="true">→</span>
+                </button>
+
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<!-- ── Rodapé ────────────────────────────────────────────── -->
+<footer>
+    <span>© 2026 Lynx Monitor</span>
+    <span class="sep">·</span>
+    <a href="#">Privacidade</a>
+    <span class="sep">·</span>
+    <a href="#">Termos de Uso</a>
+</footer>
+
+<script src="{{ url_for('static', filename='theme.js') }}"></script>
+<script src="{{ url_for('static', filename='index.js') }}"></script>

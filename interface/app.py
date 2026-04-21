@@ -1,65 +1,44 @@
+from flask import Flask, render_template, request, redirect, url_for, session
 
-# interface/app.py — Davi
-# O monitoramento precisa rodar em thread separada para não travar o Flask. O frontend consulta /status a cada poucos segundos para atualizar a tela ao vivo.
-# # PSEUDOCÓDIGO — interface/app.py
+app = Flask(__name__)
+app.secret_key = 'chave_secreta_para_seguranca'
 
-# IMPORTAR Flask, threading
-# IMPORTAR Buscador, AlteracaoDetectada  # do core
-# IMPORTAR notificar                      # do core
-# IMPORTAR validar_url, validar_email, validar_numero, validar_texto_busca
-# IMPORTAR configurar_logger
+@app.route('/', methods=['GET', 'POST'])
+def tela1():
+    if request.method == 'POST':
+        nome  = request.form.get('userName')
+        email = request.form.get('userEmail')
 
-# app    = Flask(__name__)
-# logger = configurar_logger()
+        if nome and email:
+            session['userName'] = nome
+            print(f">>> Dados Recebidos: Nome={nome}, Email={email}")
+            return redirect(url_for('tela2'))  
 
-# # Estado global compartilhado entre Flask e a thread de monitoramento
-# estado = {
-#     buscador       : None,
-#     rodando        : False,
-#     valor_atual    : None,
-#     historico      : [],     # lista de {antes, depois, hora}
-#     email_destino  : None,
-#     xpath          : None,
-# }
+    return render_template('tela1_nome.html')
 
-# ============================================================
-#  ROTAS
-# ============================================================
 
-# ROTA GET "/":
-#     renderizar templates/tela1_nome.html
+@app.route('/tela2', methods=['GET', 'POST'])
+def tela2():
+    nome = session.get('userName', 'Usuário')
 
-# ------------------------------------------------------------
+    if request.method == 'POST':
+        url   = request.form.get('urlPagina')
+        texto = request.form.get('textoBusca')
+        # lógica de busca
+        return redirect(url_for('tela3'))     
 
-# ROTA POST "/buscar":
-#     # Recebe: { nome, url, texto_busca }
+    return render_template('tela2_busca.html', nome=nome)
 
-#     pegar nome, url, texto_busca do corpo JSON
 
-#     # Validar os três campos
-#     PARA CADA (valor, validador) em [(url, validar_url), (texto_busca, validar_texto_busca)]:
-#         ok, msg = validador(valor)
-#         SE não ok:
-#             RETORNAR JSON { erro: msg }, status 400
+@app.route('/confirmar')
+def tela3():
+    return render_template('tela3_confirmar.html')
 
-#     # Abrir buscador e procurar o elemento
-#     estado["buscador"] = novo Buscador()
-#     estado["buscador"].iniciar_driver()
-#     estado["buscador"].carregar_pagina(url)
 
-#     resultado = estado["buscador"].localizar_por_texto(texto_busca)
+if __name__ == '__main__':
+    app.run(debug=True)
 
-#     SE não resultado.encontrado:
-#         RETORNAR JSON { erro: "Texto não encontrado na página" }, status 404
-
-#     guardar resultado.xpath_utilizado em estado["xpath"]
-#     guardar resultado.valor_atual em estado["valor_atual"]
-
-#     RETORNAR JSON {
-#         valor : resultado.valor_atual,
-#         xpath : resultado.xpath_utilizado
-#     }
-
+    
 # ------------------------------------------------------------
 
 # ROTA POST "/iniciar":
