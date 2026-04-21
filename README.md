@@ -4,7 +4,7 @@ Guia rápido para rodar o projeto.
 
 ## Clonar Repositório
 ```bash
-git clone [https://github.com/beabritw/scraping-a-algo-2026-1](https://github.com/beabritw/scraping-a-algo-2026-1.git)
+git clone https://github.com/beabritw/scraping-a-algo-2026-1.git
 
 cd scraping-a-algo-2026-1
 ```
