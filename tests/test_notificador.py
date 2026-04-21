@@ -6,6 +6,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from config import logger
+
 
 @pytest.fixture
 def notificador_module(monkeypatch):
@@ -71,8 +73,7 @@ def test_notificar_trata_erro_de_autenticacao(notificador_module, monkeypatch):
 
     notificador_module.notificar("100", "200", "destino@email.com", logger)
 
-    logger.error.assert_called_once_with("Falha de login â€” verifique EMAIL_SENHA")
-
+    logger.error.assert_called_once_with("Falha de login — verifique EMAIL_SENHA")
 
 def test_notificar_trata_erro_inesperado(notificador_module, monkeypatch):
     logger = MagicMock()
