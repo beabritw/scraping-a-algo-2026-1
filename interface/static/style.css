@@ -9,8 +9,6 @@
    6. Utilitários
    7. Animações
 ============================================================ */
-
-/* ── 1. TOKENS ──────────────────────────────────────────── */
 :root {
     /* Paleta — Modo Claro */
     --bg:            #f0f4fa;
@@ -83,7 +81,7 @@
     --shadow-lg:  0 12px 40px rgba(0,0,0,.5);
 }
 
-/* ── 2. RESET & BASE ────────────────────────────────────── */
+/*BASE*/
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html {
@@ -115,7 +113,7 @@ body::before {
     z-index: 0;
 }
 
-/* ── 3. COMPONENTES COMPARTILHADOS ──────────────────────── */
+/*COMPONENTES COMPARTILHADOS */
 
 /* Titlebar */
 .titlebar {
@@ -341,7 +339,7 @@ footer .sep { opacity: .4; }
                 border-color var(--duration) var(--ease);
 }
 
-/* ── 4. TELA 1 — LOGIN ──────────────────────────────────── */
+/*LOGIN*/
 .page-login {
     min-height: calc(100vh - 57px - 45px);
     display: flex;
@@ -422,7 +420,7 @@ footer .sep { opacity: .4; }
     background: var(--border);
 }
 
-/* ── 5. TELA 2 — BUSCA ──────────────────────────────────── */
+/* Busca */
 .page-busca {
     min-height: calc(100vh - 57px - 45px);
     display: flex;
@@ -501,14 +499,14 @@ footer .sep { opacity: .4; }
 
 .busca-hint .hint-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
 
-/* ── 6. UTILITÁRIOS ─────────────────────────────────────── */
+/*UTILITÁRIOS  */
 .sr-only {
     position: absolute; width: 1px; height: 1px;
     padding: 0; margin: -1px; overflow: hidden;
     clip: rect(0,0,0,0); white-space: nowrap; border: 0;
 }
 
-/* ── 7. ANIMAÇÕES ───────────────────────────────────────── */
+/* ANIMAÇÕES*/
 @keyframes slideDown {
     from { opacity: 0; transform: translateY(-6px); }
     to   { opacity: 1; transform: translateY(0); }
@@ -526,4 +524,22 @@ footer .sep { opacity: .4; }
     .titlebar { padding: var(--sp-3) var(--sp-4); }
     .login-card, .busca-card { padding: var(--sp-6) var(--sp-5); }
     .busca-header { flex-direction: column; align-items: flex-start; }
+}
+
+
+        
+.input-field.invalid {
+    border-color: var(--danger);
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, .12);
+}
+.field-error {
+    display: none;
+    font-size: 12.5px;
+    color: var(--danger);
+    margin-top: var(--sp-1);
+    align-items: center;
+    gap: var(--sp-1);
+    }
+.field-error.visible {
+    display: flex;
 }
