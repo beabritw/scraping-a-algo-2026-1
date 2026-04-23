@@ -62,10 +62,10 @@
                     </span>
                 </div>
                 
-                <form class="form-row" method="POST" novalidate id="form-row">
-                    <div id="errorMessage" class="error-box" role="alert">
+                <form class="form-row" method="POST" action="/tela2" novalidate id="form-row">
+                    <div id="errorMessage" class="error-box{% if erro %} visible{% endif %}" role="alert">
                         <span aria-hidden="true">⚠️</span>
-                        <span id="errorText">Erro</span>
+                        <span id="errorText">{{ erro or '' }}</span>
                     </div>
                     
                     <div class="form-row">
@@ -76,6 +76,7 @@
                         id="urlPagina"
                         name="urlPagina"
                         placeholder="https://exemplo.com/produto"
+                        value="{{ url_preenchida or '' }}"
                         autocomplete="off"
                         spellcheck="false"
                         required>
@@ -89,11 +90,12 @@
                         type="text"
                         id="textoBusca"
                         placeholder="Ex: R$ 189 ou Em estoque"
+                        value="{{ texto_preenchido or '' }}"
                         autocomplete="off"
                         required>
                     </div>
                     
-                    <button id="btnBuscar" class="btn-primary">
+                    <button id="btnBuscar" class="btn-primary" type="submit">
                         <span id="btnLabel">Buscar elemento</span>
                         <span id="btnIcon" aria-hidden="true">→</span>
                     </button>
