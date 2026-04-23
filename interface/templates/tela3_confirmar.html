@@ -5,3 +5,278 @@ botão "Sim, monitorar esse valor"
 botão "Não, tentar outro texto"
 → "Sim": ir para tela4
 → "Não": voltar para tela2 -->
+
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmar Elemento — Lynx Monitor</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <style>
+        /* ── Tela 3 — Confirmar ─────────────────────────────── */
+        .page-confirmar {
+            min-height: calc(100vh - 57px - 45px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: var(--sp-8) var(--sp-4) calc(var(--sp-8) + 45px);
+            position: relative;
+            z-index: 1;
+        }
+
+        .confirmar-layout {
+            width: 100%;
+            max-width: 540px;
+            display: flex;
+            flex-direction: column;
+            gap: var(--sp-6);
+        }
+
+        .confirmar-header {
+            text-align: center;
+        }
+
+        .confirmar-header .step-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--sp-2);
+            background: var(--accent-soft);
+            color: var(--accent-text);
+            padding: var(--sp-1) var(--sp-4);
+            border-radius: var(--radius-xl);
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: .8px;
+            text-transform: uppercase;
+            margin-bottom: var(--sp-4);
+            font-family: var(--font-mono);
+        }
+
+        .confirmar-header h2 {
+            font-family: var(--font-display);
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1.2;
+            margin-bottom: var(--sp-2);
+        }
+
+        .confirmar-header p {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .confirmar-card {
+            padding: var(--sp-8);
+            display: flex;
+            flex-direction: column;
+            gap: var(--sp-6);
+        }
+
+        /* Valor encontrado em destaque */
+        .valor-destaque {
+            background: var(--accent-soft);
+            border: 1.5px solid var(--accent);
+            border-radius: var(--radius-lg);
+            padding: var(--sp-6) var(--sp-8);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .valor-destaque::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 50% 0%, var(--accent-soft) 0%, transparent 70%);
+            opacity: .6;
+        }
+
+        .valor-label {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--accent-text);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: var(--sp-2);
+            position: relative;
+        }
+
+        .valor-texto {
+            font-family: var(--font-display);
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--accent);
+            line-height: 1.2;
+            word-break: break-word;
+            position: relative;
+        }
+
+        /* XPath em destaque secundário */
+        .xpath-box {
+            background: var(--surface-raised);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: var(--sp-4);
+        }
+
+        .xpath-label {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            font-weight: 500;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: var(--sp-2);
+            display: flex;
+            align-items: center;
+            gap: var(--sp-2);
+        }
+
+        .xpath-label::before {
+            content: '';
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            background: var(--accent);
+            border-radius: 50%;
+        }
+
+        .xpath-valor {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: var(--text-secondary);
+            word-break: break-all;
+            line-height: 1.6;
+        }
+
+        /* Botões */
+        .confirmar-actions {
+            display: flex;
+            flex-direction: column;
+            gap: var(--sp-3);
+        }
+
+        .btn-secondary {
+            width: 100%;
+            padding: var(--sp-3) var(--sp-6);
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-md);
+            font-family: var(--font-body);
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            letter-spacing: .2px;
+            transition: all var(--duration) var(--ease);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--sp-2);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--text-secondary);
+            background: var(--surface-raised);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:active { transform: scale(.98); }
+
+        @media (max-width: 480px) {
+            .valor-texto { font-size: 24px; }
+            .confirmar-card { padding: var(--sp-6) var(--sp-5); }
+        }
+    </style>
+
+    <script>
+        (function(){
+            var t = localStorage.getItem('lynx-theme');
+            var d = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            document.documentElement.setAttribute('data-theme', t || (d ? 'dark' : 'light'));
+        })();
+    </script>
+</head>
+<body>
+
+<div class="titlebar">
+    <a class="titlebar-brand" href="/">
+        <div class="brand-icon" aria-hidden="true">L</div>
+        <div class="brand-text">
+            <h1>Lynx Monitor</h1>
+            <small>De olho nos dados em tempo real</small>
+        </div>
+    </a>
+
+    <button id="theme-toggle" class="theme-toggle" aria-label="Alternar tema">
+        <span class="icon" aria-hidden="true"></span>
+        <span class="label-dark">Modo escuro</span>
+        <span class="label-light">Modo claro</span>
+    </button>
+</div>
+
+<main class="page-confirmar">
+    <div class="confirmar-layout">
+
+        <div class="confirmar-header">
+            <div class="step-badge">✦ Passo 2 de 3</div>
+            <h2>Elemento encontrado!</h2>
+            <p>Confirme se este é o valor que deseja monitorar</p>
+        </div>
+
+        <div class="card confirmar-card">
+
+            <div class="valor-destaque">
+                <div class="valor-label">Valor encontrado</div>
+                <div class="valor-texto" id="valorTexto">{{ valor }}</div>
+            </div>
+
+            <div class="xpath-box">
+                <div class="xpath-label">XPath do elemento</div>
+                <div class="xpath-valor" id="xpathValor">{{ xpath }}</div>
+            </div>
+
+            <div class="confirmar-actions">
+                <button class="btn-primary" id="btnSim" name="btnSim">
+                    <span>✓</span>
+                    <span>Sim, monitorar esse valor</span>
+                </button>
+                <button class="btn-secondary" id="btnNao" name="btnNao">
+                    <span>←</span>
+                    <span>Não, tentar outro texto</span>
+                </button>
+            </div>
+
+        </div>
+
+    </div>
+</main>
+
+<footer>
+    <span>© 2026 Lynx Monitor</span>
+    <span class="sep">·</span>
+    <a href="https://github.com/beabritw/scraping-a-algo-2026-1.git">Sobre o nosso Projeto</a>
+</footer>
+
+<script src="{{ url_for('static', filename='theme.js') }}"></script>
+<script>
+    document.getElementById('btnSim').addEventListener('click', () => {
+        window.location.href = '/tela4';
+    });
+
+    document.getElementById('btnNao').addEventListener('click', () => {
+        window.location.href = '/tela2';
+    });
+</script>
+
+</body>
+</html>

@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session
 
 app = Flask(__name__)
-app.secret_key = 'chave_secreta_para_seguranca'
+app.secret_key = '1e516662603a6c6804bf8d4d5375e3bb9c9343caeb34cccd35bcdfce5d8964a5'
 
 @app.route('/', methods=['GET', 'POST'])
 def tela1():
@@ -12,28 +12,40 @@ def tela1():
         if nome and email:
             session['userName'] = nome
             print(f">>> Dados Recebidos: Nome={nome}, Email={email}")
-            return redirect(url_for('tela2'))  
-
+            return redirect(url_for('tela2')) 
+        
     return render_template('tela1_nome.html')
 
 
 @app.route('/tela2', methods=['GET', 'POST'])
 def tela2():
-    nome = session.get('userName', 'Usuário')
+    userSession = session.get('userName', 'Visitante')
 
     if request.method == 'POST':
-        url   = request.form.get('urlPagina')
-        texto = request.form.get('textoBusca')
-        # lógica de busca
-        return redirect(url_for('tela3'))     
+        url = request.form.get('urlPagina')
+        search = request.form.get('textoBusca')
+        
+        if url and search:
+            print(f"Usuario {userSession} busca: {search} no site: {url}")
+            return redirect(url_for('tela3'))
+            
+    return render_template('tela2_busca.html', nome=userSession)
 
-    return render_template('tela2_busca.html', nome=nome)
-
-
-@app.route('/confirmar')
+@app.route('/tela3')
 def tela3():
+#btnSim
+#btnNao
+
+
     return render_template('tela3_confirmar.html')
 
+@app.route('/tela4')
+def tela4():
+    return render_template('tela4_configurar.html')
+
+@app.route('/tela5')
+def tela5():
+    return render_template('tela5_monitor.html')
 
 if __name__ == '__main__':
     app.run(debug=True)

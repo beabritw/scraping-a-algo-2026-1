@@ -1,4 +1,4 @@
-   // ── Validação de formulário ───────────────────────────────────
+   //Validação - Login
     const form        = document.getElementById('loginForm');
     const nameInput   = document.getElementById('userName');
     const emailInput  = document.getElementById('userEmail');
@@ -6,10 +6,8 @@
     const emailError  = document.getElementById('emailError');
     const emailErrMsg = document.getElementById('emailErrorMsg');
 
-    // Regex: exige usuario@dominio.ext (mínimo 2 chars no TLD)
     const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
-    // ── Funções de estado ─────────────────────────────────────────
     function setError(input, errorEl, msgEl, msg) {
         input.classList.add('invalid');
         input.setAttribute('aria-invalid', 'true');
@@ -22,8 +20,6 @@
         input.setAttribute('aria-invalid', 'false');
         errorEl.classList.remove('visible');
     }
-
-    // ── Regras de validação ───────────────────────────────────────
     function validateName() {
         const val = nameInput.value.trim();
         if (!val) {
@@ -48,11 +44,9 @@
         return true;
     }
 
-    // ── Eventos: valida ao sair do campo ─────────────────────────
     nameInput.addEventListener('blur',  validateName);
     emailInput.addEventListener('blur', validateEmail);
 
-    // Limpa erro enquanto o usuário digita (após primeiro erro)
     nameInput.addEventListener('input', () => {
         if (nameInput.classList.contains('invalid')) validateName();
     });
@@ -61,14 +55,12 @@
         if (emailInput.classList.contains('invalid')) validateEmail();
     });
 
-    // ── Submit: bloqueia se houver erro ──────────────────────────
     form.addEventListener('submit', (e) => {
         const nameOk  = validateName();
         const emailOk = validateEmail();
 
         if (!nameOk || !emailOk) {
             e.preventDefault();
-            // Foca no primeiro campo com problema
             if (!nameOk)  nameInput.focus();
             else           emailInput.focus();
         }

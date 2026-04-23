@@ -3,33 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Início — Lynx Monitor</title>
-
+    <title>Lynx Monitor</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-
-    <style>
-        /* Feedback visual de campo inválido */
-        .input-field.invalid {
-            border-color: var(--danger);
-            box-shadow: 0 0 0 3px rgba(220, 38, 38, .12);
-        }
-
-        .field-error {
-            display: none;
-            font-size: 12.5px;
-            color: var(--danger);
-            margin-top: var(--sp-1);
-            align-items: center;
-            gap: var(--sp-1);
-        }
-
-        .field-error.visible {
-            display: flex;
-        }
-    </style>
 
     <script>
         (function(){
@@ -39,89 +17,85 @@
         })();
     </script>
 </head>
+
+
 <body>
-
-<div class="titlebar">
-    <a class="titlebar-brand">
-        <div class="brand-icon" aria-hidden="true">L</div>
-        <div class="brand-text">
-            <h1>Lynx Monitor</h1>
-            <small>De olho nos dados em tempo real</small>
-        </div>
-    </a>
-
-    <button id="theme-toggle" class="theme-toggle" aria-label="Alternar tema">
-        <span class="icon" aria-hidden="true"></span>
-        <span class="label-dark">Modo escuro</span>
-        <span class="label-light">Modo claro</span>
-    </button>
-</div>
-
-<main class="page-login">
-    <div class="card login-card">
-
-        <div class="login-header">
-            <div class="welcome-badge">✦ Fique por dentro das atualizações de preços em tempo real </div>
-            <p>Informe seus dados para continuar</p>
-        </div>
-
-        <form class="login-form" method="POST" novalidate id="loginForm">
-            <div class="login-divider">✦</div>
-
-            <!-- Campo Nome -->
-            <div class="form-row">
-                <label class="input-label" for="userName">Nome</label>
-                <input
+    <div class="titlebar">
+        <a class="titlebar-brand">
+            <div class="brand-icon" aria-hidden="true">L</div>
+            <div class="brand-text">
+                <h1>Lynx Monitor</h1>
+                <small>De olho nos dados em tempo real</small>
+            </div>
+        </a>
+        
+        <button id="theme-toggle" class="theme-toggle" aria-label="Alternar tema">
+            <span class="icon" aria-hidden="true"></span>
+            <span class="label-dark">Modo escuro</span>
+            <span class="label-light">Modo claro</span>
+        </button>
+    </div>
+    
+    <main class="page-login">
+        <div class="card login-card">
+            <div class="login-header">
+                <div class="welcome-badge">✦ Fique por dentro das atualizações de preços em tempo real </div>
+                <p>Informe seus dados para continuar</p>
+            </div>
+            
+            <form class="login-form" method="POST" novalidate id="loginForm">
+                
+                <div class="login-divider">✦</div>
+                
+                <div class="form-row">
+                    <label class="input-label" for="userName">Nome</label>
+                    
+                    <input
                     class="input-field"
                     type="text"
                     id="userName"
                     name="userName"
                     placeholder="Como podemos te chamar?"
                     autocomplete="name"
-                    required
-                >
-                <span class="field-error" id="nameError">
-                    <span aria-hidden="true">⚠</span>&nbsp;Informe seu nome.
-                </span>
-            </div>
-
-            <!-- Campo E-mail -->
-            <div class="form-row">
-                <label class="input-label" for="userEmail">E-mail</label>
-                <input
+                    required>
+                    
+                    <span class="field-error" id="nameError">
+                    <span aria-hidden="true">⚠</span>&nbsp;Informe seu nome.</span>
+                </div>
+                
+                <div class="form-row">
+                    <label class="input-label" for="userEmail">E-mail</label>
+                    
+                    <input
                     class="input-field"
                     type="email"
                     id="userEmail"
                     name="userEmail"
                     placeholder="seu@email.com"
                     autocomplete="email"
-                    required
-                >
-                <span class="field-error" id="emailError">
+                    required>
+
+                
+                    <span class="field-error" id="emailError">
                     <span aria-hidden="true">⚠</span>&nbsp;<span id="emailErrorMsg"></span>
                 </span>
-            </div>
-
-            <button type="submit" class="btn-primary" id="btnEntrar">
-                <span>Entrar</span>
-                <span aria-hidden="true">→</span>
-            </button>
-        </form>
-
-    </div>
-</main>
-
-<footer>
-    <span>© 2026 Lynx Monitor</span>
-    <span class="sep">·</span>
-    <a href="#">Privacidade</a>
-    <span class="sep">·</span>
-    <a href="#">Termos de Uso</a>
-</footer>
-
-<script src="{{ url_for('static', filename='theme.js') }}"></script>
-<script src="{{ url_for('static', filename='index.js') }}"></script>
-
-
+                </div>
+                
+                <button type="submit" class="btn-primary" id="btnEntrar">
+                    <span>Entrar</span>
+                    <span aria-hidden="true">→</span>
+                </button>
+            </form>
+        </div>
+    </main>
+    
+    <footer>
+        <span>© 2026 Lynx Monitor</span>
+        <span class="sep">·</span>
+        <a href="https://github.com/beabritw/scraping-a-algo-2026-1.git">Sobre o nosso Projeto</a>
+    </footer>
+    
+    <script src="{{ url_for('static', filename='theme.js') }}"></script>
+    <script src="{{ url_for('static', filename='index.js') }}"></script>
 </body>
 </html>
