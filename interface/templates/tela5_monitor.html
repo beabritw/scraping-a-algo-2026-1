@@ -14,3 +14,520 @@ Não usar <form action="..."> — usar fetch() em JavaScript. Assim o Flask resp
 
 *****o monitoramento roda em thread separada, e o frontend chama /status a cada 5 segundos para atualizar a tela ao vivo. 
     -->
+
+
+    <!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitorando — Lynx Monitor</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <style>
+        /* ── Tela 5 — Monitor ───────────────────────────────── */
+        .page-monitor {
+            min-height: calc(100vh - 57px - 45px);
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding: var(--sp-10) var(--sp-4) calc(var(--sp-10) + 45px);
+            position: relative;
+            z-index: 1;
+        }
+
+        .monitor-layout {
+            width: 100%;
+            max-width: 680px;
+            display: flex;
+            flex-direction: column;
+            gap: var(--sp-6);
+        }
+
+        /* Cabeçalho com status ao vivo */
+        .monitor-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: var(--sp-4);
+        }
+
+        .monitor-header h2 {
+            font-family: var(--font-display);
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .monitor-header p {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-top: var(--sp-1);
+        }
+
+        /* Badge ao vivo */
+        .live-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--sp-2);
+            background: var(--danger-soft);
+            border: 1px solid var(--danger);
+            border-radius: var(--radius-xl);
+            padding: var(--sp-2) var(--sp-4);
+            font-family: var(--font-mono);
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--danger);
+            white-space: nowrap;
+        }
+
+        .live-dot {
+            width: 7px;
+            height: 7px;
+            background: var(--danger);
+            border-radius: 50%;
+            animation: pulse 1.4s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50%       { opacity: .4; transform: scale(.7); }
+        }
+
+        /* Parado */
+        .live-badge.parado {
+            background: var(--surface-raised);
+            border-color: var(--border);
+            color: var(--text-muted);
+        }
+
+        .live-badge.parado .live-dot {
+            background: var(--text-muted);
+            animation: none;
+        }
+
+        /* Card valor atual */
+        .valor-card {
+            padding: var(--sp-8);
+        }
+
+        .valor-atual-container {
+            display: flex;
+            align-items: center;
+            gap: var(--sp-6);
+            flex-wrap: wrap;
+        }
+
+        .valor-atual-info {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .valor-atual-label {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: var(--sp-2);
+        }
+
+        .valor-atual-numero {
+            font-family: var(--font-display);
+            font-size: 40px;
+            font-weight: 700;
+            color: var(--accent);
+            line-height: 1.1;
+            word-break: break-word;
+            transition: color .3s ease;
+        }
+
+        .valor-atual-numero.atualizado {
+            color: var(--danger);
+            animation: flash .6s ease;
+        }
+
+        @keyframes flash {
+            0%   { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .valor-meta {
+            display: flex;
+            flex-direction: column;
+            gap: var(--sp-2);
+            border-left: 2px solid var(--border);
+            padding-left: var(--sp-6);
+        }
+
+        .meta-item {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .meta-item small {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            color: var(--text-muted);
+            letter-spacing: .8px;
+            text-transform: uppercase;
+        }
+
+        .meta-item span {
+            font-family: var(--font-mono);
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        /* Card histórico */
+        .historico-card {
+            padding: var(--sp-6) var(--sp-8);
+        }
+
+        .historico-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: var(--sp-5);
+        }
+
+        .historico-titulo {
+            font-family: var(--font-display);
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .historico-count {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: var(--text-muted);
+            background: var(--surface-raised);
+            border: 1px solid var(--border);
+            padding: 2px var(--sp-3);
+            border-radius: var(--radius-xl);
+        }
+
+        /* Lista de alterações */
+        .historico-lista {
+            display: flex;
+            flex-direction: column;
+            gap: var(--sp-3);
+            max-height: 340px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border) transparent;
+        }
+
+        .historico-lista::-webkit-scrollbar { width: 4px; }
+        .historico-lista::-webkit-scrollbar-track { background: transparent; }
+        .historico-lista::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+        .historico-vazio {
+            text-align: center;
+            padding: var(--sp-10) var(--sp-6);
+            color: var(--text-muted);
+            font-size: 14px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: var(--sp-3);
+        }
+
+        .historico-vazio .vazio-icon {
+            font-size: 32px;
+            opacity: .5;
+        }
+
+        .historico-item {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: var(--sp-3) var(--sp-4);
+            padding: var(--sp-4);
+            background: var(--surface-raised);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            animation: slideDown .25s var(--ease) both;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .item-hora {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--text-muted);
+            padding-top: 2px;
+            white-space: nowrap;
+        }
+
+        .item-detalhe {
+            display: flex;
+            align-items: center;
+            gap: var(--sp-2);
+            flex-wrap: wrap;
+            font-family: var(--font-mono);
+            font-size: 13px;
+        }
+
+        .item-antes {
+            color: var(--danger);
+            text-decoration: line-through;
+            opacity: .8;
+        }
+
+        .item-seta {
+            color: var(--text-muted);
+        }
+
+        .item-depois {
+            color: var(--accent);
+            font-weight: 500;
+        }
+
+        /* Botão de parar */
+        .btn-danger {
+            width: 100%;
+            padding: var(--sp-3) var(--sp-6);
+            background: var(--danger-soft);
+            color: var(--danger);
+            border: 1.5px solid var(--danger);
+            border-radius: var(--radius-md);
+            font-family: var(--font-body);
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            letter-spacing: .2px;
+            transition: all var(--duration) var(--ease);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--sp-2);
+        }
+
+        .btn-danger:hover {
+            background: var(--danger);
+            color: #fff;
+        }
+
+        .btn-danger:active { transform: scale(.98); }
+        .btn-danger:disabled { opacity: .6; cursor: not-allowed; }
+
+        @media (max-width: 480px) {
+            .valor-card { padding: var(--sp-6) var(--sp-5); }
+            .historico-card { padding: var(--sp-5); }
+            .valor-meta { border-left: none; padding-left: 0; border-top: 2px solid var(--border); padding-top: var(--sp-4); }
+            .valor-atual-numero { font-size: 28px; }
+            .monitor-header { flex-direction: column; align-items: flex-start; }
+        }
+    </style>
+
+    <script>
+        (function(){
+            var t = localStorage.getItem('lynx-theme');
+            var d = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            document.documentElement.setAttribute('data-theme', t || (d ? 'dark' : 'light'));
+        })();
+    </script>
+</head>
+<body>
+
+<div class="titlebar">
+    <a class="titlebar-brand" href="/">
+        <div class="brand-icon" aria-hidden="true">L</div>
+        <div class="brand-text">
+            <h1>Lynx Monitor</h1>
+            <small>De olho nos dados em tempo real</small>
+        </div>
+    </a>
+
+    <button id="theme-toggle" class="theme-toggle" aria-label="Alternar tema">
+        <span class="icon" aria-hidden="true"></span>
+        <span class="label-dark">Modo escuro</span>
+        <span class="label-light">Modo claro</span>
+    </button>
+</div>
+
+<main class="page-monitor">
+    <div class="monitor-layout">
+
+        <div class="monitor-header">
+            <div>
+                <h2>Monitoramento ativo</h2>
+                <p id="subtitulo">Verificando alterações em tempo real…</p>
+            </div>
+            <div class="live-badge" id="liveBadge">
+                <div class="live-dot"></div>
+                <span id="liveLabel">AO VIVO</span>
+            </div>
+        </div>
+
+        <div class="card valor-card">
+            <div class="valor-atual-container">
+                <div class="valor-atual-info">
+                    <div class="valor-atual-label">Valor atual</div>
+                    <div class="valor-atual-numero" id="valorAtual">—</div>
+                </div>
+                <div class="valor-meta">
+                    <div class="meta-item">
+                        <small>Última verificação</small>
+                        <span id="ultimaVerif">—</span>
+                    </div>
+                    <div class="meta-item">
+                        <small>Alterações</small>
+                        <span id="totalAlteracoes">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card historico-card">
+            <div class="historico-header">
+                <div class="historico-titulo">Histórico de alterações</div>
+                <div class="historico-count" id="historicoCount">0 registros</div>
+            </div>
+
+            <div class="historico-lista" id="historicoLista">
+                <div class="historico-vazio" id="historicoVazio">
+                    <div class="vazio-icon">📋</div>
+                    <span>Nenhuma alteração detectada ainda.<br>Continuando monitoramento…</span>
+                </div>
+            </div>
+        </div>
+
+        <button class="btn-danger" id="btnParar">
+            <span>■</span>
+            <span id="btnPararLabel">Parar monitoramento</span>
+        </button>
+
+    </div>
+</main>
+
+<footer>
+    <span>© 2026 Lynx Monitor</span>
+    <span class="sep">·</span>
+    <a href="https://github.com/beabritw/scraping-a-algo-2026-1.git">Sobre o nosso Projeto</a>
+</footer>
+
+<script src="{{ url_for('static', filename='theme.js') }}"></script>
+<script>
+    let historicoVisto = 0;
+    let rodando        = true;
+    let intervaloId    = null;
+
+    const elValor     = document.getElementById('valorAtual');
+    const elUltima    = document.getElementById('ultimaVerif');
+    const elTotal     = document.getElementById('totalAlteracoes');
+    const elCount     = document.getElementById('historicoCount');
+    const elLista     = document.getElementById('historicoLista');
+    const elVazio     = document.getElementById('historicoVazio');
+    const elBadge     = document.getElementById('liveBadge');
+    const elLiveLabel = document.getElementById('liveLabel');
+    const elSubtitulo = document.getElementById('subtitulo');
+
+    function horaAgora() {
+        return new Date().toLocaleTimeString('pt-BR', { hour12: false });
+    }
+
+    function adicionarItem(hora, antes, depois) {
+        elVazio.style.display = 'none';
+
+        const item = document.createElement('div');
+        item.className = 'historico-item';
+        item.innerHTML = `
+            <div class="item-hora">${hora}</div>
+            <div class="item-detalhe">
+                <span class="item-antes">${antes}</span>
+                <span class="item-seta">→</span>
+                <span class="item-depois">${depois}</span>
+            </div>
+        `;
+        elLista.insertBefore(item, elLista.firstChild);
+    }
+
+    function piscarValor() {
+        elValor.classList.add('atualizado');
+        setTimeout(() => elValor.classList.remove('atualizado'), 700);
+    }
+
+    async function verificarStatus() {
+        try {
+            const res  = await fetch('/status');
+            const data = await res.json();
+
+            if (data.valor_atual !== undefined && data.valor_atual !== null) {
+                const novo = String(data.valor_atual);
+                if (elValor.textContent !== novo && elValor.textContent !== '—') {
+                    piscarValor();
+                }
+                elValor.textContent = novo;
+            }
+
+            elUltima.textContent = horaAgora();
+
+            if (data.historico && data.historico.length > historicoVisto) {
+                const novas = data.historico.slice(historicoVisto);
+                novas.forEach(alt => {
+                    adicionarItem(alt.hora, alt.antes, alt.depois);
+                });
+                historicoVisto = data.historico.length;
+
+                elTotal.textContent = historicoVisto;
+                elCount.textContent = `${historicoVisto} registro${historicoVisto !== 1 ? 's' : ''}`;
+            }
+
+            if (!data.rodando) {
+                pararInterface();
+            }
+
+        } catch (err) {
+            console.error('Erro ao buscar status:', err);
+        }
+    }
+
+    verificarStatus(); // primeira chamada imediata
+    intervaloId = setInterval(verificarStatus, 5000);
+
+    function pararInterface() {
+        if (!rodando) return;
+        rodando = false;
+        clearInterval(intervaloId);
+
+        elBadge.classList.add('parado');
+        elLiveLabel.textContent = 'PARADO';
+        elSubtitulo.textContent = 'Monitoramento encerrado.';
+        document.getElementById('btnPararLabel').textContent = 'Voltar ao início';
+    }
+
+    document.getElementById('btnParar').addEventListener('click', async () => {
+        if (!rodando) {
+            window.location.href = '/';
+            return;
+        }
+
+        const btn = document.getElementById('btnParar');
+        btn.disabled = true;
+        document.getElementById('btnPararLabel').textContent = 'Parando…';
+
+        try {
+            await fetch('/parar', { method: 'POST' });
+        } catch (err) {
+            console.error('Erro ao parar:', err);
+        } finally {
+            pararInterface();
+            setTimeout(() => { window.location.href = '/'; }, 800);
+        }
+    });
+</script>
+
+</body>
+</html>

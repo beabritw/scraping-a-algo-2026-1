@@ -31,11 +31,21 @@ def tela2():
             
     return render_template('tela2_busca.html', nome=userSession)
 
-
 @app.route('/tela3')
 def tela3():
+#btnSim
+#btnNao
+
+
     return render_template('tela3_confirmar.html')
 
+@app.route('/tela4')
+def tela4():
+    return render_template('tela4_configurar.html')
+
+@app.route('/tela5')
+def tela5():
+    return render_template('tela5_monitor.html')
 
 if __name__ == '__main__':
     app.run(debug=True)

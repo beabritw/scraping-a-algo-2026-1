@@ -5,3 +5,356 @@ botão "Iniciar monitoramento"
 → ao clicar: fetch POST /iniciar com { url, xpath, intervalo, email }
     SE erro: mostrar mensagem de erro, não avança
     SE ok:   ir para tela5 -->
+
+
+    <!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configurar Monitoramento — Lynx Monitor</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <style>
+        /* ── Tela 4 — Configurar ────────────────────────────── */
+        .page-config {
+            min-height: calc(100vh - 57px - 45px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: var(--sp-8) var(--sp-4) calc(var(--sp-8) + 45px);
+            position: relative;
+            z-index: 1;
+        }
+
+        .config-layout {
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+            gap: var(--sp-6);
+        }
+
+        .config-header {
+            text-align: center;
+        }
+
+        .config-header .step-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--sp-2);
+            background: var(--accent-soft);
+            color: var(--accent-text);
+            padding: var(--sp-1) var(--sp-4);
+            border-radius: var(--radius-xl);
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: .8px;
+            text-transform: uppercase;
+            margin-bottom: var(--sp-4);
+            font-family: var(--font-mono);
+        }
+
+        .config-header h2 {
+            font-family: var(--font-display);
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1.2;
+            margin-bottom: var(--sp-2);
+        }
+
+        .config-header p {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .config-card {
+            padding: var(--sp-8);
+        }
+
+        .config-form {
+            display: flex;
+            flex-direction: column;
+            gap: var(--sp-6);
+        }
+
+        /* Resumo do alvo monitorado */
+        .alvo-resumo {
+            padding: var(--sp-4);
+            background: var(--surface-raised);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            gap: var(--sp-3);
+        }
+
+        .alvo-icon {
+            width: 36px;
+            height: 36px;
+            background: var(--accent-soft);
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .alvo-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .alvo-info small {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            color: var(--text-muted);
+            letter-spacing: .8px;
+            text-transform: uppercase;
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .alvo-info strong {
+            font-size: 14px;
+            color: var(--text-primary);
+            font-weight: 600;
+            display: block;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Sugestões de intervalo */
+        .intervalos-rapidos {
+            display: flex;
+            gap: var(--sp-2);
+            flex-wrap: wrap;
+            margin-top: var(--sp-2);
+        }
+
+        .intervalo-chip {
+            padding: var(--sp-1) var(--sp-3);
+            background: var(--surface-raised);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xl);
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all var(--duration) var(--ease);
+        }
+
+        .intervalo-chip:hover,
+        .intervalo-chip.ativo {
+            background: var(--accent-soft);
+            border-color: var(--accent);
+            color: var(--accent-text);
+        }
+
+        .input-hint {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+            margin-top: var(--sp-1);
+        }
+
+        @media (max-width: 480px) {
+            .config-card { padding: var(--sp-6) var(--sp-5); }
+        }
+    </style>
+
+    <script>
+        (function(){
+            var t = localStorage.getItem('lynx-theme');
+            var d = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            document.documentElement.setAttribute('data-theme', t || (d ? 'dark' : 'light'));
+        })();
+    </script>
+</head>
+<body>
+
+<div class="titlebar">
+    <a class="titlebar-brand" href="/">
+        <div class="brand-icon" aria-hidden="true">L</div>
+        <div class="brand-text">
+            <h1>Lynx Monitor</h1>
+            <small>De olho nos dados em tempo real</small>
+        </div>
+    </a>
+
+    <button id="theme-toggle" class="theme-toggle" aria-label="Alternar tema">
+        <span class="icon" aria-hidden="true"></span>
+        <span class="label-dark">Modo escuro</span>
+        <span class="label-light">Modo claro</span>
+    </button>
+</div>
+
+<main class="page-config">
+    <div class="config-layout">
+
+        <div class="config-header">
+            <div class="step-badge">✦ Passo 3 de 3</div>
+            <h2>Configurar alertas</h2>
+            <p>Defina a frequência e onde receber notificações</p>
+        </div>
+
+        <div class="card config-card">
+            <div class="config-form">
+
+                <div class="alvo-resumo">
+                    <div class="alvo-icon"></div>
+                    <div class="alvo-info">
+                        <small>Monitorando</small>
+                        <strong id="valorResumo">Carregando…</strong>
+                    </div>
+                </div>
+
+                <div id="errorMessage" class="error-box" role="alert">
+                    <span aria-hidden="true">⚠️</span>
+                    <span id="errorText">Erro</span>
+                </div>
+
+                <div class="form-row">
+                    <label class="input-label" for="intervalo">Verificar a cada quantos segundos?</label>
+                    <input
+                        class="input-field"
+                        type="number"
+                        id="intervalo"
+                        placeholder="Ex: 60"
+                        min="10"
+                        max="86400"
+                        value="60"
+                        autocomplete="off"
+                        required
+                    >
+                    <div class="input-hint">Mínimo: 10 segundos</div>
+                    <div class="intervalos-rapidos">
+                        <button type="button" class="intervalo-chip" data-val="30">30s</button>
+                        <button type="button" class="intervalo-chip ativo" data-val="60">1 min</button>
+                        <button type="button" class="intervalo-chip" data-val="300">5 min</button>
+                        <button type="button" class="intervalo-chip" data-val="3600">1 hora</button>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <label class="input-label" for="emailAlerta">E-mail para receber os alertas</label>
+                    <input
+                        class="input-field"
+                        type="email"
+                        id="emailAlerta"
+                        placeholder="seu@email.com"
+                        autocomplete="email"
+                        required
+                    >
+                </div>
+
+                <button class="btn-primary" id="btnIniciar">
+                    <span id="btnLabel">Iniciar monitoramento</span>
+                    <span id="btnIcon" aria-hidden="true">▶</span>
+                </button>
+
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<footer>
+    <span>© 2026 Lynx Monitor</span>
+    <span class="sep">·</span>
+    <a href="https://github.com/beabritw/scraping-a-algo-2026-1.git">Sobre o nosso Projeto</a>
+</footer>
+
+<script src="{{ url_for('static', filename='theme.js') }}"></script>
+<script>
+    const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+    const valorResumo = document.getElementById('valorResumo');
+    const valorSalvo  = sessionStorage.getItem('lynx-valor');
+    if (valorSalvo) valorResumo.textContent = valorSalvo;
+
+    const intervaloInput = document.getElementById('intervalo');
+    document.querySelectorAll('.intervalo-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+            document.querySelectorAll('.intervalo-chip').forEach(c => c.classList.remove('ativo'));
+            chip.classList.add('ativo');
+            intervaloInput.value = chip.dataset.val;
+        });
+    });
+
+    intervaloInput.addEventListener('input', () => {
+        document.querySelectorAll('.intervalo-chip').forEach(c => c.classList.remove('ativo'));
+    });
+
+    const errorBox  = document.getElementById('errorMessage');
+    const errorText = document.getElementById('errorText');
+
+    function showError(msg) {
+        errorText.textContent = msg;
+        errorBox.classList.add('visible');
+    }
+
+    function hideError() {
+        errorBox.classList.remove('visible');
+    }
+
+    document.getElementById('btnIniciar').addEventListener('click', async () => {
+        hideError();
+
+        const intervalo = parseInt(intervaloInput.value, 10);
+        const email     = document.getElementById('emailAlerta').value.trim();
+        const btn       = document.getElementById('btnIniciar');
+
+        if (isNaN(intervalo) || intervalo < 10) {
+            showError('Informe um intervalo de pelo menos 10 segundos.');
+            intervaloInput.focus();
+            return;
+        }
+
+        if (!email || !EMAIL_REGEX.test(email)) {
+            showError('Informe um e-mail válido para receber os alertas.');
+            document.getElementById('emailAlerta').focus();
+            return;
+        }
+
+        btn.disabled = true;
+        document.getElementById('btnLabel').textContent = 'Iniciando…';
+        document.getElementById('btnIcon').textContent = '⏳';
+
+        try {
+            const res = await fetch('/iniciar', {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify({ intervalo, email })
+            });
+
+            const data = await res.json();
+
+            if (!res.ok || data.erro) {
+                showError(data.erro || 'Erro ao iniciar o monitoramento.');
+                btn.disabled = false;
+                document.getElementById('btnLabel').textContent = 'Iniciar monitoramento';
+                document.getElementById('btnIcon').textContent = '▶';
+                return;
+            }
+
+            window.location.href = '/tela5';
+
+        } catch (err) {
+            showError('Falha na comunicação com o servidor.');
+            btn.disabled = false;
+            document.getElementById('btnLabel').textContent = 'Iniciar monitoramento';
+            document.getElementById('btnIcon').textContent = '▶';
+        }
+    });
+</script>
+
+</body>
+</html>
