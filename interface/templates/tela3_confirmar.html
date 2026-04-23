@@ -1,85 +1,79 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Confirmar Elemento — Lynx Monitor</title>
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-
-
-    <script>
-        (function(){
-            var t = localStorage.getItem('lynx-theme');
-            var d = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            document.documentElement.setAttribute('data-theme', t || (d ? 'dark' : 'light'));
-        })();
-    </script>
-</head>
-<body>
-
-<div class="titlebar">
-    <a class="titlebar-brand" href="/">
-        <div class="brand-icon" aria-hidden="true">L</div>
-        <div class="brand-text">
-            <h1>Lynx Monitor</h1>
-            <small>De olho nos dados em tempo real</small>
-        </div>
-    </a>
-
-    <button id="theme-toggle" class="theme-toggle" aria-label="Alternar tema">
-        <span class="icon" aria-hidden="true"></span>
-        <span class="label-dark">Modo escuro</span>
-        <span class="label-light">Modo claro</span>
-    </button>
-</div>
-
-<main class="page-confirmar">
-    <div class="confirmar-layout">
-
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Confirmar</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
         
-
-        <div class="confirmar-header">
-            <div class="step-badge">✦</div>
-            <h2>Valor encontrado!</h2>
-            <p>Confirme se este é o valor que deseja monitorar</p>
+        <script>
+            (function(){
+                var t = localStorage.getItem('lynx-theme');
+                var d = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                document.documentElement.setAttribute('data-theme', t || (d ? 'dark' : 'light'));
+            })();
+        </script>
+    </head>
+    
+    <body>
+        <div class="titlebar">
+            <a class="titlebar-brand" href="/">
+                <div class="brand-icon" aria-hidden="true">L</div>
+                
+                <div class="brand-text">
+                    <h1>Lynx Monitor</h1>
+                    <small>De olho nos dados em tempo real</small>
+                </div>
+            </a>
+            
+            <button id="theme-toggle" class="theme-toggle" aria-label="Alternar tema">
+                <span class="icon" aria-hidden="true"></span>
+                <span class="label-dark">Modo escuro</span>
+                <span class="label-light">Modo claro</span>
+            </button>
         </div>
-
-        <div class="card confirmar-card">
-
-            <div class="valor-destaque">
-                <div class="valor-label">Valor encontrado</div>
-                <div class="valor-texto" id="valorTexto">{{ valor }}</div>
+        
+        <main class="page-confirmar">
+            <div class="confirmar-layout">
+                <div class="confirmar-header">
+                    <div class="step-badge">✦</div>
+                    <h2>Valor encontrado!</h2>
+                    <p>Confirme se este é o valor que deseja monitorar</p>
+                </div>
+                
+                <div class="card confirmar-card">
+                    <div class="valor-destaque">
+                        <div class="valor-label">Valor encontrado</div>
+                        <div class="valor-texto" id="valorTexto">{{ valor }}</div>
+                    </div>
+                    
+                    <div class="xpath-box">
+                        <div class="xpath-label">XPath do elemento</div>
+                        <div class="xpath-valor" id="xpathValor">{{ xpath }}</div>
+                    </div>
+                    
+                    <div class="confirmar-actions">
+                        <button class="btn-primary" id="btnSim" name="btnSim">
+                            <span>Monitorar esse valor</span>
+                        </button>
+                        
+                        <button class="btn-secondary" id="btnNao" name="btnNao">
+                            <span>Não, tentar outro texto</span>
+                        </button>
+                    </div>
+                </div>
             </div>
+        </main>
+        
+        <footer>
+            <span>© 2026 Lynx Monitor Project</span>
+            <span class="sep">·</span>
+            <a href="https://github.com/beabritw/scraping-a-algo-2026-1.git">Sobre o nosso Projeto</a>
+        </footer>
 
-            <div class="xpath-box">
-                <div class="xpath-label">XPath do elemento</div>
-                <div class="xpath-valor" id="xpathValor">{{ xpath }}</div>
-            </div>
-
-            <div class="confirmar-actions">
-                <button class="btn-primary" id="btnSim" name="btnSim">
-                    <span>Sim, desejo monitorar esse valor</span>
-                </button>
-                <button class="btn-secondary" id="btnNao" name="btnNao">
-                    <span>←</span>
-                    <span>Não, tentar outro texto</span>
-                </button>
-            </div>
-
-        </div>
-
-    </div>
-</main>
-
-<footer>
-    <span>© 2026 Lynx Monitor</span>
-    <span class="sep">·</span>
-    <a href="https://github.com/beabritw/scraping-a-algo-2026-1.git">Sobre o nosso Projeto</a>
-</footer>
 
 <script src="{{ url_for('static', filename='theme.js') }}"></script>
 <script>

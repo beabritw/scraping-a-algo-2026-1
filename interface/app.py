@@ -8,7 +8,7 @@ import re
 app = Flask(__name__)
 app.secret_key = '1e516662603a6c6804bf8d4d5375e3bb9c9343caeb34cccd35bcdfce5d8964a5'
 
-# ── Estado global do monitoramento 
+#estado global do monitoramento 
 estado = {
     "rodando":       False,
     "valor_atual":   None,
@@ -19,27 +19,26 @@ estado = {
     "thread":        None,
 }
 
-# ── Helpers
+#helpers
 
 def validar_numero(intervalo):
     try:
         n = int(intervalo)
         if n < 10:
-            return False, "O intervalo mínimo é 10 segundos."
+            return False, "O intervalo min 10 segundos."
         return True, ""
     except (ValueError, TypeError):
-        return False, "Intervalo inválido."
+        return False, "Intervalo, erro."
 
 
 def validar_email(email):
     padrao = r'^[^\s@]+@[^\s@]+\.[^\s@]{2,}$'
     if not email or not re.match(padrao, email):
-        return False, "E-mail inválido."
+        return False, "Email invalido."
     return True, ""
 
 
 def _get_xpath(element):
-    """Gera o XPath absoluto de um elemento lxml."""
     parts = []
     el = element
     while el is not None and el.tag not in ('html', lxml_html.HtmlElement):
@@ -59,24 +58,19 @@ def _get_xpath(element):
 
 
 def buscar_elemento_por_texto(url, texto):
-    """
-    Faz o scraping da URL e retorna (valor, xpath, erro).
-    Busca o menor elemento que contenha o texto de referência.
-    """
     try:
         headers = {
             'User-Agent': (
                 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
                 'AppleWebKit/537.36 (KHTML, like Gecko) '
                 'Chrome/124.0 Safari/537.36'
-            )
-        }
+                )
+            }
+        
         resposta = req.get(url, headers=headers, timeout=15)
         resposta.raise_for_status()
-
         tree = lxml_html.fromstring(resposta.content)
-
-        # Remove scripts e styles para não poluir a busca
+        
         for tag in tree.xpath('//script | //style | //noscript'):
             parent = tag.getparent()
             if parent is not None:
@@ -84,7 +78,7 @@ def buscar_elemento_por_texto(url, texto):
 
         texto_lower = texto.strip().lower()
 
-        # Procura o elemento folha (ou mais profundo) que contém o texto
+        # procura o elemento folha que contem o texto
         candidatos = tree.xpath(
             f'//*[contains(translate(normalize-space(.), '
             f'"ABCDEFGHIJKLMNOPQRSTUVWXYZÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖÙÚÛÜÝÞŸ",'
@@ -95,7 +89,7 @@ def buscar_elemento_por_texto(url, texto):
         if not candidatos:
             return None, None, f'Texto "{texto}" não encontrado na página.'
 
-        # Prefere o elemento mais específico (mais profundo / menor conteúdo)
+        # prefere o elemento mais especifico mais profundo / menor conteúdo
         candidatos.sort(key=lambda e: len(e.text_content()))
         el = candidatos[0]
 
@@ -115,7 +109,6 @@ def buscar_elemento_por_texto(url, texto):
 
 
 def buscar_valor_por_xpath(url, xpath):
-    """Retorna o texto atual do elemento identificado pelo XPath."""
     try:
         headers = {'User-Agent': 'Mozilla/5.0'}
         resposta = req.get(url, headers=headers, timeout=15)
@@ -150,12 +143,8 @@ def _loop_monitoramento(url, xpath, intervalo):
                     f"Antes: {valor_antigo!r} → Depois: {valor_novo!r} | "
                     f"Email: {estado['email_destino']}"
                 )
-                # TODO: chamar função de envio de e-mail aqui
-
             estado["valor_atual"] = valor_novo
-
         time.sleep(intervalo)
-
     print("[MONITOR] Loop encerrado.")
 
 
@@ -205,7 +194,6 @@ def tela2():
             session['xpathEncontrado'] = xpath
             print(f">>> [TELA 2] Valor={valor!r} | XPath={xpath!r}")
             return redirect(url_for('tela3'))
-
     return render_template('tela2_busca.html', nome=nome)
 
 
@@ -247,7 +235,6 @@ def iniciar():
     if not url or not xpath:
         return jsonify({"erro": "Sessão expirada. Por favor, reinicie o processo."}), 400
 
-    # Para thread anterior se ainda estiver rodando
     if estado["rodando"]:
         estado["rodando"] = False
         t = estado.get("thread")
