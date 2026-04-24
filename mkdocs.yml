@@ -1,0 +1,17 @@
+site_name: 'Lynx Monitor'
+site_description: 'Sistema de Web Scraping e Monitorização em Tempo Real'
+site_author: 'Equipa do Projeto'
+
+theme:
+  name: 'material'
+  language: 'pt'
+  features:
+    - 'navigation.tabs'
+  palette:
+    scheme: 'slate'
+    primary: 'indigo'
+    accent: 'amber'
+
+nav:
+  - 'Início': 'index.md'
+  - 'Análise de Algoritmos (Big-O)': 'big_o.md'
