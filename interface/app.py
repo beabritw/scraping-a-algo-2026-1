@@ -6,20 +6,21 @@ import requests as req
 from lxml import html as lxml_html
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 
-
 diretorio_atual = os.path.dirname(os.path.abspath(__file__))
 diretorio_raiz = os.path.abspath(os.path.join(diretorio_atual, '..'))
 sys.path.append(diretorio_raiz)
+
+from dotenv import load_dotenv
+load_dotenv()  # ← carrega o .env antes de qualquer coisa
 
 from config.logger import configurar_logger
 from core.notificador import notificar
 from core.validacao import validar_numero, validar_email, validar_nome
 
 app = Flask(__name__)
-app.secret_key = '1e516662603a6c6804bf8d4d5375e3bb9c9343caeb34cccd35bcdfce5d8964a5'
+app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'chave-local-desenvolvimento')
 logger = configurar_logger()
 
-# Estado global do monitoramento 
 estado = {
     "rodando":       False,
     "valor_atual":   None,
@@ -30,9 +31,7 @@ estado = {
     "thread":        None,
 }
 
-# ==============================================================================
-# MOTOR DE BUSCA (Requests + LXML) - Otimizado e Rápido
-# ==============================================================================
+
 def _get_xpath(element):
     parts = []
     el = element
