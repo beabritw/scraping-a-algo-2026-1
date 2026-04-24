@@ -53,7 +53,9 @@ python interface/app.py
 ## Execute os testes:
 
 ```bash
-pytest -v```
+pytest -v
+```
+
 
 ---
 
