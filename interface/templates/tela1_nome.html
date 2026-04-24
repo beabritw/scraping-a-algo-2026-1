@@ -45,6 +45,11 @@
                 
                 <form class="login-form" method="POST" novalidate id="loginForm">
                     <div class="login-divider">✦</div>
+                    {% if erro %}
+                        <div style="color: #D8000C; background-color: #FFBABA; padding: 10px; border-radius: 5px; margin-bottom: 15px; border: 1px solid #D8000C; font-size: 14px; font-weight: 500; text-align: center;">
+                            {{ erro }}
+                        </div>
+                    {% endif %}
                     
                     <div class="form-row">
                         <label class="input-label" for="userName">Nome</label>

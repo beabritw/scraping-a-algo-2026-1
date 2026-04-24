@@ -1,14 +1,25 @@
-from flask import Flask, render_template, request, redirect, url_for, session, jsonify
+import os
+import sys
 import threading
+import time
 import requests as req
 from lxml import html as lxml_html
-import time
-import re
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify
+
+
+diretorio_atual = os.path.dirname(os.path.abspath(__file__))
+diretorio_raiz = os.path.abspath(os.path.join(diretorio_atual, '..'))
+sys.path.append(diretorio_raiz)
+
+from config.logger import configurar_logger
+from core.notificador import notificar
+from core.validacao import validar_numero, validar_email, validar_nome
 
 app = Flask(__name__)
 app.secret_key = '1e516662603a6c6804bf8d4d5375e3bb9c9343caeb34cccd35bcdfce5d8964a5'
+logger = configurar_logger()
 
-#estado global do monitoramento 
+# Estado global do monitoramento 
 estado = {
     "rodando":       False,
     "valor_atual":   None,
@@ -19,25 +30,9 @@ estado = {
     "thread":        None,
 }
 
-#helpers
-
-def validar_numero(intervalo):
-    try:
-        n = int(intervalo)
-        if n < 10:
-            return False, "O intervalo min 10 segundos."
-        return True, ""
-    except (ValueError, TypeError):
-        return False, "Intervalo, erro."
-
-
-def validar_email(email):
-    padrao = r'^[^\s@]+@[^\s@]+\.[^\s@]{2,}$'
-    if not email or not re.match(padrao, email):
-        return False, "Email invalido."
-    return True, ""
-
-
+# ==============================================================================
+# MOTOR DE BUSCA (Requests + LXML) - Otimizado e Rápido
+# ==============================================================================
 def _get_xpath(element):
     parts = []
     el = element
@@ -46,9 +41,9 @@ def _get_xpath(element):
         if parent is None:
             parts.append(el.tag)
             break
-        irmãos = parent.findall(el.tag)
-        if len(irmãos) > 1:
-            idx = list(irmãos).index(el) + 1
+        irmaos = parent.findall(el.tag)
+        if len(irmaos) > 1:
+            idx = list(irmaos).index(el) + 1
             parts.append(f'{el.tag}[{idx}]')
         else:
             parts.append(el.tag)
@@ -64,8 +59,8 @@ def buscar_elemento_por_texto(url, texto):
                 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
                 'AppleWebKit/537.36 (KHTML, like Gecko) '
                 'Chrome/124.0 Safari/537.36'
-                )
-            }
+            )
+        }
         
         resposta = req.get(url, headers=headers, timeout=15)
         resposta.raise_for_status()
@@ -78,7 +73,6 @@ def buscar_elemento_por_texto(url, texto):
 
         texto_lower = texto.strip().lower()
 
-        # procura o elemento folha que contem o texto
         candidatos = tree.xpath(
             f'//*[contains(translate(normalize-space(.), '
             f'"ABCDEFGHIJKLMNOPQRSTUVWXYZÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖÙÚÛÜÝÞŸ",'
@@ -89,7 +83,6 @@ def buscar_elemento_por_texto(url, texto):
         if not candidatos:
             return None, None, f'Texto "{texto}" não encontrado na página.'
 
-        # prefere o elemento mais especifico mais profundo / menor conteúdo
         candidatos.sort(key=lambda e: len(e.text_content()))
         el = candidatos[0]
 
@@ -98,14 +91,8 @@ def buscar_elemento_por_texto(url, texto):
 
         return valor, xpath, None
 
-    except req.exceptions.ConnectionError:
-        return None, None, "Não foi possível conectar ao site. Verifique a URL."
-    except req.exceptions.Timeout:
-        return None, None, "O site demorou muito para responder (timeout)."
-    except req.exceptions.HTTPError as e:
-        return None, None, f"O site retornou um erro: {e.response.status_code}."
     except Exception as e:
-        return None, None, f"Erro inesperado: {str(e)}"
+        return None, None, f"Erro ao acessar site: {str(e)}"
 
 
 def buscar_valor_por_xpath(url, xpath):
@@ -124,10 +111,8 @@ def buscar_valor_por_xpath(url, xpath):
         return None
 
 
-# Thread de monitoramento 
-
 def _loop_monitoramento(url, xpath, intervalo):
-    print(f"[MONITOR] Iniciando loop | URL={url} | intervalo={intervalo}s")
+    logger.info(f"Thread de monitoramento iniciada | URL={url} | intervalo={intervalo}s")
     while estado["rodando"]:
         valor_novo = buscar_valor_por_xpath(url, xpath)
 
@@ -138,30 +123,45 @@ def _loop_monitoramento(url, xpath, intervalo):
                 hora = time.strftime('%H:%M:%S')
                 entrada = {"antes": valor_antigo, "depois": valor_novo, "hora": hora}
                 estado["historico"].append(entrada)
-                print(
-                    f"[ALTERAÇÃO] {hora} | "
-                    f"Antes: {valor_antigo!r} → Depois: {valor_novo!r} | "
-                    f"Email: {estado['email_destino']}"
-                )
+                
+                logger.info(f"ALTERAÇÃO DETECTADA: {valor_antigo} -> {valor_novo}")
+                
+                try:
+                    notificar(valor_antigo, valor_novo, estado["email_destino"], logger)
+                except Exception as e:
+                    logger.error(f"Erro ao notificar no background: {e}")
+
             estado["valor_atual"] = valor_novo
         time.sleep(intervalo)
-    print("[MONITOR] Loop encerrado.")
-
+    logger.info("Loop de monitoramento encerrado.")
 
 
 @app.route('/', methods=['GET', 'POST'])
 def tela1():
+    erro_msg = None
+    
     if request.method == 'POST':
         nome  = request.form.get('userName',  '').strip()
         email = request.form.get('userEmail', '').strip()
 
-        if nome and email:
+        valido_nome, msg_nome = validar_nome(nome)
+        valido_email, msg_email = validar_email(email)
+
+        if not valido_nome:
+            erro_msg = msg_nome
+            logger.warning(f"Tentativa web bloqueada | Campo: Nome | Motivo: {msg_nome}")
+            
+        elif not valido_email:
+            erro_msg = msg_email
+            logger.warning(f"Tentativa web bloqueada | Campo: Email | Motivo: {msg_email}")
+            
+        else:
             session['userName']  = nome
             session['userEmail'] = email
-            print(f">>> [TELA 1] Nome={nome!r}, Email={email!r}")
+            logger.info(f"Dados da Tela 1 validados com sucesso | Nome: {nome}")
             return redirect(url_for('tela2'))
 
-    return render_template('tela1_nome.html')
+    return render_template('tela1_nome.html', erro=erro_msg)
 
 
 @app.route('/tela2', methods=['GET', 'POST'])
@@ -176,24 +176,17 @@ def tela2():
             session['urlPagina']  = url
             session['textoBusca'] = texto
 
-            print(f">>> [TELA 2] Usuário={nome!r} | URL={url!r} | Texto={texto!r}")
-
+            logger.info(f"Buscando elemento | URL={url} | Texto={texto}")
             valor, xpath, erro = buscar_elemento_por_texto(url, texto)
 
             if erro:
-                print(f">>> [TELA 2] Erro no scraping: {erro}")
-                return render_template(
-                    'tela2_busca.html',
-                    nome=nome,
-                    erro=erro,
-                    url_preenchida=url,
-                    texto_preenchido=texto,
-                )
+                logger.error(f"Erro no scraping: {erro}")
+                return render_template('tela2_busca.html', nome=nome, erro=erro, url_preenchida=url, texto_preenchido=texto)
 
             session['valorEncontrado'] = valor
             session['xpathEncontrado'] = xpath
-            print(f">>> [TELA 2] Valor={valor!r} | XPath={xpath!r}")
             return redirect(url_for('tela3'))
+            
     return render_template('tela2_busca.html', nome=nome)
 
 
@@ -221,7 +214,11 @@ def iniciar():
     intervalo = dados.get('intervalo')
     email     = dados.get('email', '').strip()
 
-    ok, msg = validar_numero(intervalo)
+    ok, msg = validar_nome(session.get('userName', ''))
+    if not ok:
+        return jsonify({"erro": msg}), 400
+    
+    ok, msg = validar_numero(str(intervalo))
     if not ok:
         return jsonify({"erro": msg}), 400
 
@@ -241,7 +238,6 @@ def iniciar():
         if t and t.is_alive():
             t.join(timeout=3)
 
-    # Reseta o estado
     estado["rodando"]       = True
     estado["valor_atual"]   = session.get('valorEncontrado')
     estado["historico"]     = []
@@ -249,16 +245,7 @@ def iniciar():
     estado["xpath"]         = xpath
     estado["url"]           = url
 
-    # Log completo com todos os dados do usuário
-    nome       = session.get('userName',  '—')
-    userEmail  = session.get('userEmail', '—')
-    textoBusca = session.get('textoBusca','—')
-
-    print(
-        f">>> [INICIAR] Nome={nome!r} | UserEmail={userEmail!r} | "
-        f"URL={url!r} | Texto={textoBusca!r} | "
-        f"Intervalo={intervalo}s | AlertaEmail={email!r}"
-    )
+    logger.info(f"Comando de inicialização recebido para a URL: {url}")
 
     thread = threading.Thread(
         target=_loop_monitoramento,
@@ -284,7 +271,7 @@ def status():
 def parar():
     estado["rodando"] = False
     nome = session.get('userName', '—')
-    print(f">>> [PARAR] Monitoramento encerrado pelo usuário {nome!r}.")
+    logger.info(f"Monitoramento encerrado pelo usuário {nome}.")
     return jsonify({"ok": True})
 
 
