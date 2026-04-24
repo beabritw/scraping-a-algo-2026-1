@@ -42,6 +42,19 @@ EMAIL_SENHA=abcdefghijklmnop
 python orquestrador.py
 ```
 
+
+## Execute a interface:
+
+```bash
+python interface/app.py
+```
+
+
+## Execute os testes:
+
+```bash
+pytest -v```
+
 ---
 
 #### Exemplo do recebimemto do email com valor antigo e atualizado:
