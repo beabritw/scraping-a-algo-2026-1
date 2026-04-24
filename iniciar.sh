@@ -4,6 +4,11 @@ echo "=========================================="
 echo "  Lynx Monitor - Script de Inicialização  "
 echo "=========================================="
 
+echo "🧹 Limpando portas e processos antigos..."
+fuser -k 5000/tcp 2>/dev/null
+fuser -k 8000/tcp 2>/dev/null
+sleep 1
+
 if [ ! -f .env ]; then
     echo "Aviso: Arquivo .env não encontrado!"
     read -p "Digite a sua EMAIL_SENHA (16 caracteres do Google) para criarmos o arquivo agora: " email_senha
@@ -64,6 +69,8 @@ case $opcao in
         echo "Acesse o site em http://127.0.0.1:5000 e os docs em http://127.0.0.1:8000"
         echo "Pressione CTRL+C a qualquer momento para desligar ambos."
         
+        trap 'kill $(jobs -p) 2>/dev/null; echo -e "\n🛑 Processos encerrados."; exit' SIGINT SIGTERM
+
         mkdocs serve &
         python interface/app.py &
         
