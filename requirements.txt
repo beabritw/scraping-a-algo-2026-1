@@ -6,3 +6,6 @@ mkdocs
 mkdocs-material
 mkdocstrings[python]
 python-dotenv
+flask 
+lxml
+requests
