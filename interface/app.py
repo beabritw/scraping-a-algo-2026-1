@@ -212,7 +212,7 @@ def tela5():
 def iniciar():
     dados     = request.get_json(force=True) or {}
     intervalo = dados.get('intervalo')
-    email     = dados.get('email', '').strip()
+    email     = session.get('userEmail', '').strip()
 
     ok, msg = validar_nome(session.get('userName', ''))
     if not ok:

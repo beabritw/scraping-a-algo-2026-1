@@ -83,7 +83,7 @@
                             </div>
                         </div>
                         
-                        <div class="form-row">
+                        <!-- <div class="form-row">
                             <label class="input-label" for="emailAlerta">E-mail para receber os alertas</label>
                             <input
                             class="input-field"
@@ -92,7 +92,7 @@
                             placeholder="seu@email.com"
                             autocomplete="email"
                             required>
-                        </div>
+                        </div> -->
                         
                         <button class="btn-primary" id="btnIniciar">
                             <span id="btnLabel">Aplicar</span>
@@ -111,9 +111,9 @@
     
     <script src="{{ url_for('static', filename='theme.js') }}"></script>
     <script>
-    const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-
     const intervaloInput = document.getElementById('intervalo');
+    
+    // Controle dos botões de atalho rápido
     document.querySelectorAll('.intervalo-chip').forEach(chip => {
         chip.addEventListener('click', () => {
             document.querySelectorAll('.intervalo-chip').forEach(c => c.classList.remove('ativo'));
@@ -142,30 +142,26 @@
         hideError();
 
         const intervalo = parseInt(intervaloInput.value, 10);
-        const email     = document.getElementById('emailAlerta').value.trim();
         const btn       = document.getElementById('btnIniciar');
 
+        // Validação exclusiva do tempo (O e-mail foi removido daqui)
         if (isNaN(intervalo) || intervalo < 10) {
             showError('Informe um intervalo de pelo menos 10 segundos.');
             intervaloInput.focus();
             return;
         }
 
-        if (!email || !EMAIL_REGEX.test(email)) {
-            showError('Informe um e-mail válido para receber os alertas.');
-            document.getElementById('emailAlerta').focus();
-            return;
-        }
-
+        // Alteração visual para indicar carregamento
         btn.disabled = true;
         document.getElementById('btnLabel').textContent = 'Iniciando…';
         document.getElementById('btnIcon').textContent = '⏳';
 
         try {
+            // Envia apenas o intervalo para o Python. O Backend já sabe qual é o e-mail.
             const res = await fetch('/iniciar', {
                 method:  'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body:    JSON.stringify({ intervalo, email })
+                body:    JSON.stringify({ intervalo })
             });
 
             const data = await res.json();
@@ -173,18 +169,19 @@
             if (!res.ok || data.erro) {
                 showError(data.erro || 'Erro ao iniciar o monitoramento.');
                 btn.disabled = false;
-                document.getElementById('btnLabel').textContent = 'Iniciar monitoramento';
-                document.getElementById('btnIcon').textContent = '▶';
+                document.getElementById('btnLabel').textContent = 'Aplicar';
+                document.getElementById('btnIcon').textContent = '';
                 return;
             }
 
+            // Sucesso! Vai para a tela de monitoramento
             window.location.href = '/tela5';
 
         } catch (err) {
             showError('Falha na comunicação com o servidor.');
             btn.disabled = false;
-            document.getElementById('btnLabel').textContent = 'Iniciar monitoramento';
-            document.getElementById('btnIcon').textContent = '▶';
+            document.getElementById('btnLabel').textContent = 'Aplicar';
+            document.getElementById('btnIcon').textContent = '';
         }
     });
 </script>
